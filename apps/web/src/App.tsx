@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { checkApiHealth, getProjects } from './lib/api'
 import type { Project } from './lib/api'
+import CreateProjectForm from './components/CreateProjectForm'
 import './App.css'
 
 function App() {
@@ -21,15 +22,26 @@ function App() {
         setError('')
       })
       .catch(() => {
-        setError('Could not load projects. Check that the backend is running.')
+        setError(
+          'Could not load projects. Check that the backend is running.',
+        )
       })
       .finally(() => setLoading(false))
   }, [])
 
+  function handleProjectCreated(newProject: Project) {
+    setProjects((currentProjects) => [
+      newProject,
+      ...currentProjects,
+    ])
+  }
+
   return (
     <main className="app">
       <header className="topbar">
-        <a className="brand" href="/">TeamFlow</a>
+        <a className="brand" href="/">
+          TeamFlow
+        </a>
         <span className="api-badge">{apiStatus}</span>
       </header>
 
@@ -47,16 +59,25 @@ function App() {
             <p className="eyebrow">WORKSPACE</p>
             <h2>Projects</h2>
           </div>
-          <span className="project-count">{projects.length} projects</span>
+
+          <span className="project-count">
+            {projects.length} {projects.length === 1 ? 'project' : 'projects'}
+          </span>
         </div>
 
-        {loading && <p className="empty-state">Loading projects...</p>}
+        <CreateProjectForm onProjectCreated={handleProjectCreated} />
 
-        {!loading && error && <p className="error-message">{error}</p>}
+        {loading && (
+          <p className="empty-state">Loading projects...</p>
+        )}
+
+        {!loading && error && (
+          <p className="error-message">{error}</p>
+        )}
 
         {!loading && !error && projects.length === 0 && (
           <p className="empty-state">
-            No projects yet. Your projects will appear here when you create them.
+            No projects yet. Create your first project above!
           </p>
         )}
 
@@ -66,15 +87,19 @@ function App() {
               <article className="project-card" key={project._id}>
                 <div className="project-card-heading">
                   <h3>{project.name}</h3>
+
                   <span className={`status status-${project.status}`}>
                     {project.status}
                   </span>
                 </div>
+
                 <p className="project-description">
                   {project.description || 'No description provided.'}
                 </p>
+
                 <p className="project-date">
-                  Created {new Date(project.createdAt).toLocaleDateString()}
+                  Created{' '}
+                  {new Date(project.createdAt).toLocaleDateString()}
                 </p>
               </article>
             ))}

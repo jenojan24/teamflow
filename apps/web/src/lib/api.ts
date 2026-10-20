@@ -45,3 +45,34 @@ export async function getProjects(): Promise<Project[]> {
 
   return result.data
 }
+
+
+export interface CreateProjectInput {
+  name: string
+  description: string
+  status: ProjectStatus
+}
+
+export async function createProject(
+  project: CreateProjectInput,
+): Promise<Project> {
+  const response = await fetch(`${API_URL}/api/projects`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(project),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to create project: ${response.status}`)
+  }
+
+  const result = (await response.json()) as ApiResponse<Project>
+
+  if (!result.success) {
+    throw new Error('The API could not create the project.')
+  }
+
+  return result.data
+}
