@@ -102,3 +102,20 @@ export async function updateProject(
 
   return result.data
 }
+
+
+export async function deleteProject(id: string): Promise<void> {
+  const response = await fetch(`${API_URL}/api/projects/${id}`, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete project: ${response.status}`)
+  }
+
+  const result = (await response.json()) as { success: boolean }
+
+  if (!result.success) {
+    throw new Error('The API could not delete the project.')
+  }
+}
