@@ -1,15 +1,47 @@
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000'
+
+export type ProjectStatus = 'planning' | 'active' | 'completed'
+
+export interface Project {
+  _id: string
+  name: string
+  description: string
+  status: ProjectStatus
+  createdAt: string
+  updatedAt: string
+}
+
+interface ApiResponse<T> {
+  success: boolean
+  data: T
+}
 
 export async function checkApiHealth() {
-  const response = await fetch(`${API_URL}/api/health`);
+  const response = await fetch(`${API_URL}/api/health`)
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    throw new Error(`API request failed: ${response.status}`)
   }
 
   return response.json() as Promise<{
-    status: string;
-    message: string;
-  }>;
+    status: string
+    message: string
+  }>
+}
+
+export async function getProjects(): Promise<Project[]> {
+  const response = await fetch(`${API_URL}/api/projects`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to load projects: ${response.status}`)
+  }
+
+  const result = (await response.json()) as ApiResponse<Project[]>
+
+  if (!result.success) {
+    throw new Error('The API could not load projects.')
+  }
+
+  return result.data
 }

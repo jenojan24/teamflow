@@ -1,42 +1,88 @@
 
-import { useEffect, useState } from "react";
-import { checkApiHealth } from "./lib/api";
-
-type ApiStatus = {
-  status: string;
-  message: string;
-};
+import { useEffect, useState } from 'react'
+import { checkApiHealth, getProjects } from './lib/api'
+import type { Project } from './lib/api'
+import './App.css'
 
 function App() {
-  const [apiStatus, setApiStatus] = useState<ApiStatus | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [apiStatus, setApiStatus] = useState('Checking API...')
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     checkApiHealth()
-      .then(setApiStatus)
-      .catch(() => setError("Could not connect to the backend."))
-      .finally(() => setLoading(false));
-  }, []);
+      .then((result) => setApiStatus(result.message))
+      .catch(() => setApiStatus('API unavailable'))
+
+    getProjects()
+      .then((data) => {
+        setProjects(data)
+        setError('')
+      })
+      .catch(() => {
+        setError('Could not load projects. Check that the backend is running.')
+      })
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
-    <main style={{ fontFamily: "sans-serif", padding: "2rem" }}>
-      <h1>TeamFlow</h1>
-      <p>Project management, made simple.</p>
+    <main className="app">
+      <header className="topbar">
+        <a className="brand" href="/">TeamFlow</a>
+        <span className="api-badge">{apiStatus}</span>
+      </header>
 
-      <h2>Backend connection</h2>
-
-      {loading && <p>Checking API connection...</p>}
-
-      {apiStatus && (
-        <p>
-          <strong>Backend connected:</strong> {apiStatus.message}
+      <section className="welcome">
+        <p className="eyebrow">YOUR TEAM WORKSPACE</p>
+        <h1>Good work starts with a plan.</h1>
+        <p className="subtitle">
+          Organize projects, track progress, and keep your team moving forward.
         </p>
-      )}
+      </section>
 
-      {error && <p role="alert">{error}</p>}
+      <section className="projects-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">WORKSPACE</p>
+            <h2>Projects</h2>
+          </div>
+          <span className="project-count">{projects.length} projects</span>
+        </div>
+
+        {loading && <p className="empty-state">Loading projects...</p>}
+
+        {!loading && error && <p className="error-message">{error}</p>}
+
+        {!loading && !error && projects.length === 0 && (
+          <p className="empty-state">
+            No projects yet. Your projects will appear here when you create them.
+          </p>
+        )}
+
+        {!loading && !error && projects.length > 0 && (
+          <div className="project-grid">
+            {projects.map((project) => (
+              <article className="project-card" key={project._id}>
+                <div className="project-card-heading">
+                  <h3>{project.name}</h3>
+                  <span className={`status status-${project.status}`}>
+                    {project.status}
+                  </span>
+                </div>
+                <p className="project-description">
+                  {project.description || 'No description provided.'}
+                </p>
+                <p className="project-date">
+                  Created {new Date(project.createdAt).toLocaleDateString()}
+                </p>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </main>
-  );
+  )
 }
 
-export default App;
+export default App
