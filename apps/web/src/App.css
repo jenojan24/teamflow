@@ -166,3 +166,73 @@
   background: #fef3c7;
   color: #92400e;
 }
+
+
+/* Create Project Form */
+.create-project-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 600px;
+  margin-bottom: 32px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.create-project-form h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.create-project-form label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.create-project-form input,
+.create-project-form textarea,
+.create-project-form select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
+  color: #111827;
+  background: #ffffff;
+}
+
+.create-project-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.create-project-form input:focus,
+.create-project-form textarea:focus,
+.create-project-form select:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 1px;
+}
+
+.create-project-form button {
+  align-self: flex-start;
+  padding: 11px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #4f46e5;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.create-project-form button:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.create-project-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
