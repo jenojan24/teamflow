@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react'
-import { checkApiHealth, getProjects } from './lib/api'
+import { checkApiHealth, getProjects,deleteProject } from './lib/api'
 import type { Project } from './lib/api'
 import CreateProjectForm from './components/CreateProjectForm'
 import ProjectCard from './components/ProjectCard'
@@ -13,6 +13,8 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editingProject, setEditingProject] = useState<Project | null>(null)
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     checkApiHealth()
@@ -49,6 +51,35 @@ function App() {
     setEditingProject(null)
   }
 
+  async function handleProjectDeleted(project: Project) {
+  const confirmed = window.confirm(
+    `Are you sure you want to delete "${project.name}"? This action cannot be undone.`,
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  setDeletingProjectId(project._id)
+  setDeleteError('')
+
+  try {
+    await deleteProject(project._id)
+
+    setProjects((currentProjects) =>
+      currentProjects.filter(
+        (currentProject) => currentProject._id !== project._id,
+      ),
+    )
+  } catch {
+    setDeleteError(
+      `Could not delete "${project.name}". Please try again.`,
+    )
+  } finally {
+    setDeletingProjectId(null)
+  }
+}
+
   return (
     <main className="app">
       <header className="topbar">
@@ -80,6 +111,12 @@ function App() {
 
         <CreateProjectForm onProjectCreated={handleProjectCreated} />
 
+        {deleteError && (
+  <p className="error-message" role="alert">
+    {deleteError}
+  </p>
+)}
+
         {loading && (
           <p className="empty-state">Loading projects...</p>
         )}
@@ -108,6 +145,8 @@ function App() {
                   <ProjectCard
                     project={project}
                     onEdit={setEditingProject}
+                    onDelete={handleProjectDeleted}
+                    isDeleting={deletingProjectId === project._id}
                   />
                 )}
               </div>

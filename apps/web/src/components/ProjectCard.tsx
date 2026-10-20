@@ -4,9 +4,16 @@ import type { Project } from '../lib/api'
 interface ProjectCardProps {
   project: Project
   onEdit: (project: Project) => void
+  onDelete: (project: Project) => void
+  isDeleting: boolean
 }
 
-function ProjectCard({ project, onEdit }: ProjectCardProps) {
+function ProjectCard({
+  project,
+  onEdit,
+  onDelete,
+  isDeleting,
+}: ProjectCardProps) {
   return (
     <article className="project-card">
       <div className="project-card-heading">
@@ -25,9 +32,20 @@ function ProjectCard({ project, onEdit }: ProjectCardProps) {
         Created {new Date(project.createdAt).toLocaleDateString()}
       </p>
 
-      <button type="button" onClick={() => onEdit(project)}>
-        Edit
-      </button>
+      <div className="project-card-actions">
+        <button type="button" onClick={() => onEdit(project)}>
+          Edit
+        </button>
+
+        <button
+          type="button"
+          className="delete-button"
+          onClick={() => onDelete(project)}
+           disabled={isDeleting}
+        >
+           {isDeleting ? 'Deleting...' : 'Delete'}
+        </button>
+      </div>
     </article>
   )
 }

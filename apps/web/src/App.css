@@ -236,3 +236,45 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+
+/* Project card actions */
+.project-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.project-card-actions button {
+  padding: 9px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.project-card-actions button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.project-card-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Delete action */
+.project-card-actions .delete-button {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.project-card-actions .delete-button:hover:not(:disabled) {
+  border-color: #f87171;
+  background: #fee2e2;
+}
