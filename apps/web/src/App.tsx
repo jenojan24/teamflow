@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { checkApiHealth, getProjects } from './lib/api'
 import type { Project } from './lib/api'
 import CreateProjectForm from './components/CreateProjectForm'
+import ProjectCard from './components/ProjectCard'
+import EditProjectForm from './components/EditProjectForm'
 import './App.css'
 
 function App() {
@@ -10,6 +12,7 @@ function App() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [editingProject, setEditingProject] = useState<Project | null>(null)
 
   useEffect(() => {
     checkApiHealth()
@@ -34,6 +37,16 @@ function App() {
       newProject,
       ...currentProjects,
     ])
+  }
+
+  function handleProjectUpdated(updatedProject: Project) {
+    setProjects((currentProjects) =>
+      currentProjects.map((project) =>
+        project._id === updatedProject._id ? updatedProject : project,
+      ),
+    )
+
+    setEditingProject(null)
   }
 
   return (
@@ -84,24 +97,20 @@ function App() {
         {!loading && !error && projects.length > 0 && (
           <div className="project-grid">
             {projects.map((project) => (
-              <article className="project-card" key={project._id}>
-                <div className="project-card-heading">
-                  <h3>{project.name}</h3>
-
-                  <span className={`status status-${project.status}`}>
-                    {project.status}
-                  </span>
-                </div>
-
-                <p className="project-description">
-                  {project.description || 'No description provided.'}
-                </p>
-
-                <p className="project-date">
-                  Created{' '}
-                  {new Date(project.createdAt).toLocaleDateString()}
-                </p>
-              </article>
+              <div key={project._id}>
+                {editingProject?._id === project._id ? (
+                  <EditProjectForm
+                    project={project}
+                    onProjectUpdated={handleProjectUpdated}
+                    onCancel={() => setEditingProject(null)}
+                  />
+                ) : (
+                  <ProjectCard
+                    project={project}
+                    onEdit={setEditingProject}
+                  />
+                )}
+              </div>
             ))}
           </div>
         )}

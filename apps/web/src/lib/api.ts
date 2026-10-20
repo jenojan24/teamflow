@@ -76,3 +76,29 @@ export async function createProject(
 
   return result.data
 }
+
+
+export async function updateProject(
+  id: string,
+  project: Partial<CreateProjectInput>,
+): Promise<Project> {
+  const response = await fetch(`${API_URL}/api/projects/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(project),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to update project: ${response.status}`)
+  }
+
+  const result = (await response.json()) as ApiResponse<Project>
+
+  if (!result.success) {
+    throw new Error('The API could not update the project.')
+  }
+
+  return result.data
+}
