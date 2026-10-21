@@ -10,6 +10,8 @@ import './App.css'
 function App() {
   const [apiStatus, setApiStatus] = useState('Checking API...')
   const [projects, setProjects] = useState<Project[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editingProject, setEditingProject] = useState<Project | null>(null)
@@ -80,6 +82,17 @@ function App() {
   }
 }
 
+const filteredProjects = projects.filter((project) => {
+  const matchesSearch = project.name
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase())
+
+  const matchesStatus =
+    statusFilter === 'all' || project.status === statusFilter
+
+  return matchesSearch && matchesStatus
+})
+
   return (
     <main className="app">
       <header className="topbar">
@@ -108,8 +121,27 @@ function App() {
             {projects.length} {projects.length === 1 ? 'project' : 'projects'}
           </span>
         </div>
-
         <CreateProjectForm onProjectCreated={handleProjectCreated} />
+          <div className="project-filters">
+            <input
+              type="search"
+              placeholder="Search projects..."
+              aria-label="Search projects by name"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+
+            <select
+              aria-label="Filter projects by status"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+            >
+              <option value="all">All statuses</option>
+              <option value="planning">Planning</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
 
         {deleteError && (
   <p className="error-message" role="alert">
@@ -133,7 +165,7 @@ function App() {
 
         {!loading && !error && projects.length > 0 && (
           <div className="project-grid">
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <div key={project._id}>
                 {editingProject?._id === project._id ? (
                   <EditProjectForm

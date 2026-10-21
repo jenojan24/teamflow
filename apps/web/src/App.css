@@ -278,3 +278,37 @@
   border-color: #f87171;
   background: #fee2e2;
 }
+
+
+.project-filters {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.project-filters input,
+.project-filters select {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font: inherit;
+}
+
+.project-filters input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.project-filters select {
+  min-width: 160px;
+}
+
+.project-filters input:focus,
+.project-filters select:focus {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
