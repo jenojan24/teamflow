@@ -81,8 +81,22 @@ function  ProjectsPage() {
     setDeletingProjectId(null)
   }
 }
+const totalProjects = projects.length
+
+const activeProjects = projects.filter(
+  (project) => project.status === 'active',
+).length
+
+const planningProjects = projects.filter(
+  (project) => project.status === 'planning',
+).length
+
+const completedProjects = projects.filter(
+  (project) => project.status === 'completed',
+).length
 
 const filteredProjects = projects.filter((project) => {
+  
   const matchesSearch = project.name
     .toLowerCase()
     .includes(searchTerm.toLowerCase())
@@ -109,6 +123,28 @@ const filteredProjects = projects.filter((project) => {
           Organize projects, track progress, and keep your team moving forward.
         </p>
       </section>
+
+      <section className="dashboard-stats">
+  <article className="stat-card">
+    <h3>Total Projects</h3>
+    <p>{totalProjects}</p>
+  </article>
+
+  <article className="stat-card">
+    <h3>Active</h3>
+    <p>{activeProjects}</p>
+  </article>
+
+  <article className="stat-card">
+    <h3>Planning</h3>
+    <p>{planningProjects}</p>
+  </article>
+
+  <article className="stat-card">
+    <h3>Completed</h3>
+    <p>{completedProjects}</p>
+  </article>
+</section>
 
       <section className="projects-section">
         <div className="section-heading">
