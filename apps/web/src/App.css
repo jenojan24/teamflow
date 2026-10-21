@@ -312,3 +312,23 @@
   outline: 2px solid #93c5fd;
   outline-offset: 2px;
 }
+
+.project-detail {
+  margin-top: 24px;
+  padding: 24px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.project-detail h1 {
+  margin-bottom: 16px;
+}
+
+.project-detail h2 {
+  margin-top: 24px;
+}
+
+.project-detail p {
+  line-height: 1.6;
+}

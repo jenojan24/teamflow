@@ -1,5 +1,6 @@
 
 import type { Project } from '../lib/api'
+import { Link } from 'react-router-dom'
 
 interface ProjectCardProps {
   project: Project
@@ -17,7 +18,11 @@ function ProjectCard({
   return (
     <article className="project-card">
       <div className="project-card-heading">
-        <h3>{project.name}</h3>
+        <h3>
+  <Link to={`/projects/${project._id}`}>
+    {project.name}
+  </Link>
+</h3>
 
         <span className={`status status-${project.status}`}>
           {project.status}
