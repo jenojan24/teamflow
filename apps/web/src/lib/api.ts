@@ -47,6 +47,22 @@ export async function getProjects(): Promise<Project[]> {
 }
 
 
+export async function getProject(id: string): Promise<Project> {
+  const response = await fetch(`${API_URL}/api/projects/${id}`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to load project: ${response.status}`)
+  }
+
+  const result = (await response.json()) as ApiResponse<Project>
+
+  if (!result.success) {
+    throw new Error('The API could not load the project.')
+  }
+
+  return result.data
+}
+
 export interface CreateProjectInput {
   name: string
   description: string
