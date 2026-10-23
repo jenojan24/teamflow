@@ -12,6 +12,7 @@ function  ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('newest')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editingProject, setEditingProject] = useState<Project | null>(null)
@@ -95,17 +96,36 @@ const completedProjects = projects.filter(
   (project) => project.status === 'completed',
 ).length
 
-const filteredProjects = projects.filter((project) => {
-  
-  const matchesSearch = project.name
-    .toLowerCase()
-    .includes(searchTerm.toLowerCase())
 
-  const matchesStatus =
-    statusFilter === 'all' || project.status === statusFilter
+const filteredProjects = projects
+  .filter((project) => {
+    const matchesSearch = project.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
 
-  return matchesSearch && matchesStatus
-})
+    const matchesStatus =
+      statusFilter === 'all' || project.status === statusFilter
+
+    return matchesSearch && matchesStatus
+  })
+  .sort((a, b) => {
+    if (sortBy === 'newest') {
+      return (
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+      )
+    }
+
+    if (sortBy === 'oldest') {
+      return (
+        new Date(a.createdAt).getTime() -
+        new Date(b.createdAt).getTime()
+      )
+    }
+
+    return a.name.localeCompare(b.name)
+  })
+
 
   return (
     <main className="app">
@@ -147,6 +167,7 @@ const filteredProjects = projects.filter((project) => {
 </section>
 
       <section className="projects-section">
+        
         <div className="section-heading">
           <div>
             <p className="eyebrow">WORKSPACE</p>
@@ -158,26 +179,38 @@ const filteredProjects = projects.filter((project) => {
           </span>
         </div>
         <CreateProjectForm onProjectCreated={handleProjectCreated} />
-          <div className="project-filters">
-            <input
-              type="search"
-              placeholder="Search projects..."
-              aria-label="Search projects by name"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
+          
+<div className="project-filters">
+  <input
+    type="search"
+    placeholder="Search projects..."
+    aria-label="Search projects by name"
+    value={searchTerm}
+    onChange={(event) => setSearchTerm(event.target.value)}
+  />
 
-            <select
-              aria-label="Filter projects by status"
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-            >
-              <option value="all">All statuses</option>
-              <option value="planning">Planning</option>
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-            </select>
-          </div>
+  <select
+    aria-label="Filter projects by status"
+    value={statusFilter}
+    onChange={(event) => setStatusFilter(event.target.value)}
+  >
+    <option value="all">All statuses</option>
+    <option value="planning">Planning</option>
+    <option value="active">Active</option>
+    <option value="completed">Completed</option>
+  </select>
+
+  <select
+    aria-label="Sort projects"
+    value={sortBy}
+    onChange={(event) => setSortBy(event.target.value)}
+  >
+    <option value="newest">Newest first</option>
+    <option value="oldest">Oldest first</option>
+    <option value="name">Project name (A–Z)</option>
+  </select>
+</div>
+
 
         {deleteError && (
   <p className="error-message" role="alert">
