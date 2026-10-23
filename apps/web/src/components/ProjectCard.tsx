@@ -24,9 +24,15 @@ function ProjectCard({
   </Link>
 </h3>
 
-        <span className={`status status-${project.status}`}>
-          {project.status}
-        </span>
+        <div className="project-card-badges">
+  <span className={`status status-${project.status}`}>
+    {project.status}
+  </span>
+
+  <span className={`priority priority-${project.priority}`}>
+    {project.priority} priority
+  </span>
+</div>
       </div>
 
       <p className="project-description">

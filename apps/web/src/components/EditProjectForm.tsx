@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { updateProject } from '../lib/api'
-import type { Project, ProjectStatus } from '../lib/api'
+import type { Project, ProjectStatus, ProjectPriority} from '../lib/api'
 
 interface EditProjectFormProps {
   project: Project
@@ -18,6 +18,7 @@ function EditProjectForm({
   const [name, setName] = useState(project.name)
   const [description, setDescription] = useState(project.description)
   const [status, setStatus] = useState<ProjectStatus>(project.status)
+  const [priority, setPriority] = useState<ProjectPriority>(project.priority)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
 
@@ -37,6 +38,7 @@ function EditProjectForm({
         name: name.trim(),
         description: description.trim(),
         status,
+        priority,
       })
 
       onProjectUpdated(updatedProject)
@@ -82,6 +84,18 @@ function EditProjectForm({
         <option value="active">Active</option>
         <option value="completed">Completed</option>
       </select>
+      <label htmlFor={`edit-priority-${project._id}`}>Priority</label>
+<select
+  id={`edit-priority-${project._id}`}
+  value={priority}
+  onChange={(event) =>
+    setPriority(event.target.value as ProjectPriority)
+  }
+>
+  <option value="low">Low</option>
+  <option value="medium">Medium</option>
+  <option value="high">High</option>
+</select>
 
       {formError && <p className="error-message" role="alert">{formError}</p>}
 

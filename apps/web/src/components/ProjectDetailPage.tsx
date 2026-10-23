@@ -81,9 +81,15 @@ function ProjectDetailPage() {
         <p className="eyebrow">PROJECT DETAILS</p>
         <h1>{project.name}</h1>
 
-        <span className={`status status-${project.status}`}>
-          {project.status}
-        </span>
+      <div className="project-card-badges">
+  <span className={`status status-${project.status}`}>
+    {project.status}
+  </span>
+
+  <span className={`priority priority-${project.priority}`}>
+    {project.priority} priority
+  </span>
+</div>
 
         <h2>Description</h2>
         <p>{project.description || 'No description provided.'}</p>

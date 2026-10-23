@@ -27,6 +27,7 @@ describe("createProjectSchema", () => {
       expect(result.data.name).toBe("TeamFlow");
       expect(result.data.description).toBe("");
       expect(result.data.status).toBe("planning");
+      expect(result.data.priority).toBe("medium");
     }
   });
 
@@ -55,6 +56,25 @@ describe("createProjectSchema", () => {
 
     expect(result.success).toBe(false);
   });
+
+  it("accepts a valid project priority", () => {
+  const result = createProjectSchema.safeParse({
+    name: "TeamFlow",
+    priority: "high",
+  });
+
+  expect(result.success).toBe(true);
+});
+
+it("rejects an unsupported priority", () => {
+  const result = createProjectSchema.safeParse({
+    name: "TeamFlow",
+    priority: "urgent",
+  });
+
+  expect(result.success).toBe(false);
+});
+
 });
 
 describe("updateProjectSchema", () => {
@@ -71,4 +91,14 @@ describe("updateProjectSchema", () => {
 
     expect(result.success).toBe(false);
   });
+
+  it("accepts a priority update", () => {
+  const result = updateProjectSchema.safeParse({
+    priority: "low",
+  });
+
+  expect(result.success).toBe(true);
+});
+
+
 });

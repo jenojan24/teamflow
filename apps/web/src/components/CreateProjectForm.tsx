@@ -18,16 +18,16 @@ function CreateProjectForm({
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
-
+  const [priority, setPriority] = useState<CreateProjectInput['priority']>('medium')
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setFormError('')
     setSuccessMessage('')
-
     const projectInput: CreateProjectInput = {
       name: name.trim(),
       description: description.trim(),
       status,
+      priority,
     }
 
     if (!projectInput.name) {
@@ -45,6 +45,7 @@ function CreateProjectForm({
       setName('')
       setDescription('')
       setStatus('planning')
+      setPriority('medium')
       setSuccessMessage('Project created successfully!')
     } catch {
       setFormError('Could not create the project. Please try again.')
@@ -89,6 +90,19 @@ function CreateProjectForm({
         <option value="active">Active</option>
         <option value="completed">Completed</option>
       </select>
+
+      <label htmlFor="project-priority">Priority</label>
+<select
+  id="project-priority"
+  value={priority}
+  onChange={(event) =>
+    setPriority(event.target.value as CreateProjectInput['priority'])
+  }
+>
+  <option value="low">Low</option>
+  <option value="medium">Medium</option>
+  <option value="high">High</option>
+</select>
 
       {formError && (
         <p className="error-message" role="alert">

@@ -43,7 +43,7 @@ export async function getProjectById(id: string): Promise<Project | null> {
 
 export async function updateProject(
   id: string,
-  data: Partial<Pick<Project, "name" | "description" | "status">>,
+  data: Partial<Pick<Project,  "name" | "description" | "status" | "priority">>,
 ): Promise<Project | null> {
   if (!ObjectId.isValid(id)) {
     return null;
