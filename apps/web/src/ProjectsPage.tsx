@@ -13,16 +13,13 @@ function ProjectsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
-
   const [currentPage, setCurrentPage] = useState(1)
   const projectsPerPage = 6
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editingProject, setEditingProject] = useState<Project | null>(null)
-  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
-    null,
-  )
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
@@ -30,7 +27,6 @@ function ProjectsPage() {
       try {
         await checkApiHealth()
         setApiStatus('Connected')
-
         const data = await getProjects()
         setProjects(data)
       } catch {
@@ -44,8 +40,6 @@ function ProjectsPage() {
     loadProjects()
   }, [])
 
-
-
   function handleProjectCreated(newProject: Project) {
     setProjects((currentProjects) => [newProject, ...currentProjects])
     setCurrentPage(1)
@@ -57,47 +51,42 @@ function ProjectsPage() {
         project._id === updatedProject._id ? updatedProject : project,
       ),
     )
-
     setEditingProject(null)
   }
 
-  async function handleProjectDeleted(projectId: string) {
-    setDeletingProjectId(projectId)
+  async function handleProjectDeleted(project: Project) {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${project.name}"? This action cannot be undone.`,
+    )
+
+    if (!confirmed) return
+
+    setDeletingProjectId(project._id)
     setDeleteError('')
 
     try {
-      await deleteProject(projectId)
-
+      await deleteProject(project._id)
       setProjects((currentProjects) =>
-        currentProjects.filter((project) => project._id !== projectId),
+        currentProjects.filter((item) => item._id !== project._id),
       )
     } catch {
-      setDeleteError('Unable to delete the project. Please try again.')
+      setDeleteError(`Could not delete "${project.name}". Please try again.`)
     } finally {
       setDeletingProjectId(null)
     }
   }
 
   const totalProjects = projects.length
-
-  const activeProjects = projects.filter(
-    (project) => project.status === 'active',
-  ).length
-
-  const planningProjects = projects.filter(
-    (project) => project.status === 'planning',
-  ).length
-
-  const completedProjects = projects.filter(
-    (project) => project.status === 'completed',
-  ).length
+  const activeProjects = projects.filter((project) => project.status === 'active').length
+  const planningProjects = projects.filter((project) => project.status === 'planning').length
+  const completedProjects = projects.filter((project) => project.status === 'completed').length
 
   const filteredProjects = projects
     .filter((project) => {
+      const term = searchTerm.toLowerCase()
       const matchesSearch =
-        project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.description.toLowerCase().includes(searchTerm.toLowerCase())
-
+        project.name.toLowerCase().includes(term) ||
+        project.description.toLowerCase().includes(term)
       const matchesStatus =
         statusFilter === 'all' || project.status === statusFilter
 
@@ -105,29 +94,21 @@ function ProjectsPage() {
     })
     .sort((a, b) => {
       if (sortBy === 'oldest') {
-        return (
-          new Date(a.createdAt).getTime() -
-          new Date(b.createdAt).getTime()
-        )
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       }
 
       if (sortBy === 'name') {
         return a.name.localeCompare(b.name)
       }
 
-      return (
-        new Date(b.createdAt).getTime() -
-        new Date(a.createdAt).getTime()
-      )
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     })
 
-  const totalPages = Math.ceil(
-    filteredProjects.length / projectsPerPage,
-  )
-
+  const totalPages = Math.ceil(filteredProjects.length / projectsPerPage)
+  const safePage = Math.min(currentPage, Math.max(totalPages, 1))
   const paginatedProjects = filteredProjects.slice(
-    (currentPage - 1) * projectsPerPage,
-    currentPage * projectsPerPage,
+    (safePage - 1) * projectsPerPage,
+    safePage * projectsPerPage,
   )
 
   return (
@@ -156,25 +137,10 @@ function ProjectsPage() {
       </section>
 
       <section className="dashboard-stats">
-        <div className="stat-card">
-          <h3>Total Projects</h3>
-          <p>{totalProjects}</p>
-        </div>
-
-        <div className="stat-card">
-          <h3>Planning</h3>
-          <p>{planningProjects}</p>
-        </div>
-
-        <div className="stat-card">
-          <h3>Active</h3>
-          <p>{activeProjects}</p>
-        </div>
-
-        <div className="stat-card">
-          <h3>Completed</h3>
-          <p>{completedProjects}</p>
-        </div>
+        <div className="stat-card"><h3>Total Projects</h3><p>{totalProjects}</p></div>
+        <div className="stat-card"><h3>Planning</h3><p>{planningProjects}</p></div>
+        <div className="stat-card"><h3>Active</h3><p>{activeProjects}</p></div>
+        <div className="stat-card"><h3>Completed</h3><p>{completedProjects}</p></div>
       </section>
 
       <section className="projects-section">
@@ -192,13 +158,19 @@ function ProjectsPage() {
             type="search"
             placeholder="Search projects..."
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={(event) => {
+              setSearchTerm(event.target.value)
+              setCurrentPage(1)
+            }}
             aria-label="Search projects"
           />
 
           <select
             value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
+            onChange={(event) => {
+              setStatusFilter(event.target.value)
+              setCurrentPage(1)
+            }}
             aria-label="Filter projects by status"
           >
             <option value="all">All statuses</option>
@@ -209,7 +181,10 @@ function ProjectsPage() {
 
           <select
             value={sortBy}
-            onChange={(event) => setSortBy(event.target.value)}
+            onChange={(event) => {
+              setSortBy(event.target.value)
+              setCurrentPage(1)
+            }}
             aria-label="Sort projects"
           >
             <option value="newest">Newest first</option>
@@ -218,30 +193,17 @@ function ProjectsPage() {
           </select>
         </div>
 
-        {deleteError && (
-          <p className="error-message" role="alert">
-            {deleteError}
-          </p>
-        )}
-
+        {deleteError && <p className="error-message" role="alert">{deleteError}</p>}
         {loading && <p>Loading projects...</p>}
-
-        {!loading && error && (
-          <p className="error-message" role="alert">
-            {error}
-          </p>
-        )}
+        {!loading && error && <p className="error-message" role="alert">{error}</p>}
 
         {!loading && !error && projects.length === 0 && (
           <p>No projects yet. Create your first project above.</p>
         )}
 
-        {!loading &&
-          !error &&
-          projects.length > 0 &&
-          filteredProjects.length === 0 && (
-            <p>No projects match your search or selected filter.</p>
-          )}
+        {!loading && !error && projects.length > 0 && filteredProjects.length === 0 && (
+          <p>No projects match your search or selected filter.</p>
+        )}
 
         {!loading && !error && filteredProjects.length > 0 && (
           <>
@@ -258,7 +220,7 @@ function ProjectsPage() {
                     <ProjectCard
                       project={project}
                       onEdit={setEditingProject}
-                        onDelete={() => handleProjectDeleted(project._id)}
+                      onDelete={() => handleProjectDeleted(project)}
                       isDeleting={deletingProjectId === project._id}
                     />
                   )}
@@ -270,26 +232,16 @@ function ProjectsPage() {
               <div className="pagination">
                 <button
                   type="button"
-                  onClick={() =>
-                    setCurrentPage((page) => Math.max(1, page - 1))
-                  }
-                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  disabled={safePage === 1}
                 >
                   Previous
                 </button>
-
-                <span>
-                  Page {currentPage} of {totalPages}
-                </span>
-
+                <span>Page {safePage} of {totalPages}</span>
                 <button
                   type="button"
-                  onClick={() =>
-                    setCurrentPage((page) =>
-                      Math.min(totalPages, page + 1),
-                    )
-                  }
-                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  disabled={safePage === totalPages}
                 >
                   Next
                 </button>
