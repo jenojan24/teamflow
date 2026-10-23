@@ -12,6 +12,7 @@ function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [priorityFilter, setPriorityFilter] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
   const [currentPage, setCurrentPage] = useState(1)
   const projectsPerPage = 6
@@ -88,9 +89,12 @@ function ProjectsPage() {
         project.name.toLowerCase().includes(term) ||
         project.description.toLowerCase().includes(term)
       const matchesStatus =
-        statusFilter === 'all' || project.status === statusFilter
+  statusFilter === 'all' || project.status === statusFilter
 
-      return matchesSearch && matchesStatus
+const matchesPriority =
+  priorityFilter === 'all' || project.priority === priorityFilter
+
+return matchesSearch && matchesStatus && matchesPriority
     })
     .sort((a, b) => {
       if (sortBy === 'oldest') {
@@ -178,6 +182,19 @@ function ProjectsPage() {
             <option value="active">Active</option>
             <option value="completed">Completed</option>
           </select>
+          <select
+  value={priorityFilter}
+  onChange={(event) => {
+    setPriorityFilter(event.target.value)
+    setCurrentPage(1)
+  }}
+  aria-label="Filter projects by priority"
+>
+  <option value="all">All priorities</option>
+  <option value="high">High priority</option>
+  <option value="medium">Medium priority</option>
+  <option value="low">Low priority</option>
+</select>
 
           <select
             value={sortBy}
