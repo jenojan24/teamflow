@@ -2,6 +2,7 @@
 import express from "express";
 import cors from "cors";
 import projectRoutes from "./routes/project.routes.js";
+import teamMemberRoutes from "./routes/team-member.routes.js";
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/projects", projectRoutes);
+app.use("/api/team-members", teamMemberRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({
