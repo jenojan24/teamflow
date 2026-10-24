@@ -197,16 +197,118 @@
   color: #166534;
 }
 /* Create Project Form */
+
+/* Colorful Create Project form */
 .create-project-form {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   max-width: 600px;
-  margin-bottom: 32px;
-  padding: 24px;
+  margin-bottom: 36px;
+  padding: 30px;
+  overflow: hidden;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e8e5ff;
+  border-radius: 20px;
+  box-shadow: 0 12px 35px rgba(91, 85, 231, 0.09);
+}
+
+.create-project-form::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #6c63ff, #d946ef, #fb7185);
+}
+
+.create-project-form h2 {
+  margin: 0 0 8px;
+  color: #292451;
+  font-size: 1.4rem;
+  font-weight: 750;
+}
+
+.create-project-form label {
+  display: block;
+  margin-bottom: 7px;
+  color: #514b75;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.create-project-form input,
+.create-project-form textarea,
+.create-project-form select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 15px;
+  border: 1px solid #e4e1f5;
   border-radius: 12px;
+  background: #faf9ff;
+  color: #252344;
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 180ms ease, box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.create-project-form input::placeholder,
+.create-project-form textarea::placeholder {
+  color: #9693ad;
+}
+
+.create-project-form input:hover,
+.create-project-form textarea:hover,
+.create-project-form select:hover {
+  border-color: #b9b2ff;
+  background: #ffffff;
+}
+
+.create-project-form input:focus,
+.create-project-form textarea:focus,
+.create-project-form select:focus {
+  outline: none;
+  border-color: #766bff;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(118, 107, 255, 0.13);
+}
+
+.create-project-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.create-project-form button {
+  align-self: flex-start;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6c63ff, #a855f7);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 5px 12px rgba(108, 99, 255, 0.2);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.create-project-form button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(108, 99, 255, 0.28);
+}
+
+.create-project-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .create-project-form {
+    padding: 24px 18px;
+  }
 }
 
 .create-project-form h2 {
@@ -390,5 +492,271 @@
   .dashboard-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.main-nav a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.main-nav a:hover {
+  text-decoration: underline;
+}
+
+.main-nav a[aria-current='page'] {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+
+
+/* Colorful Team Member form card */
+.team-member-form {
+  position: relative;
+  max-width: 760px;
+  margin: 0 0 40px;
+  padding: 30px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e8e5ff;
+  border-radius: 20px;
+  box-shadow: 0 12px 35px rgba(91, 85, 231, 0.09);
+}
+
+/* Gradient accent at the top */
+.team-member-form::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #6c63ff, #d946ef, #fb7185);
+}
+
+.team-member-form-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 8px;
+}
+
+/* Form fields */
+.team-member-form-controls input,
+.team-member-form-controls select {
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: 13px 15px;
+  box-sizing: border-box;
+  color: #252344;
+  background: #faf9ff;
+  border: 1px solid #e4e1f5;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 180ms ease, box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.team-member-form-controls input::placeholder {
+  color: #9693ad;
+}
+
+.team-member-form-controls input:hover,
+.team-member-form-controls select:hover {
+  border-color: #b9b2ff;
+  background: #ffffff;
+}
+
+.team-member-form-controls input:focus,
+.team-member-form-controls select:focus {
+  outline: none;
+  border-color: #766bff;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(118, 107, 255, 0.13);
+}
+
+/* Primary and secondary buttons */
+.team-member-form-controls button {
+  min-height: 48px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 12px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6c63ff, #a855f7);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 5px 12px rgba(108, 99, 255, 0.2);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.team-member-form-controls button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(108, 99, 255, 0.28);
+}
+
+.team-member-form-controls button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Cancel button */
+.team-member-form-controls button[type="button"] {
+  color: #6b5a85;
+  background: #f5f0ff;
+  box-shadow: none;
+}
+
+.team-member-form-controls button[type="button"]:hover:not(:disabled) {
+  background: #eee5ff;
+  box-shadow: none;
+}
+
+/* Small screens */
+@media (max-width: 600px) {
+  .team-member-form {
+    padding: 24px 18px;
+  }
+
+  .team-member-form-controls {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+/* Team Member cards */
+.team-member-card {
+  position: relative;
+  padding: 24px;
+  overflow: hidden;
+  background: linear-gradient(145deg, #ffffff 65%, #f7f5ff);
+  border: 1px solid #e8e5ff;
+  border-radius: 18px;
+  box-shadow: 0 6px 22px rgba(91, 85, 231, 0.07);
+  transition: transform 180ms ease, box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.team-member-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #6c63ff, #d946ef, #fb7185);
+}
+
+.team-member-card:hover {
+  transform: translateY(-4px);
+  border-color: #d5ceff;
+  box-shadow: 0 12px 28px rgba(91, 85, 231, 0.13);
+}
+
+.team-member-card h3 {
+  margin: 4px 0 12px;
+  color: #292451;
+  font-size: 19px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.team-member-card p {
+  margin: 8px 0;
+  color: #73718b;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.team-member-card p:nth-of-type(2) {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 11px;
+  border: 1px solid #e4ddff;
+  border-radius: 20px;
+  background: #f0ebff;
+  color: #6545c5;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Card action buttons */
+.team-member-card .project-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.team-member-card .project-controls button {
+  padding: 9px 15px;
+  border: 1px solid #ded9ff;
+  border-radius: 10px;
+  background: #f5f3ff;
+  color: #5b4acb;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.team-member-card .project-controls button:hover {
+  transform: translateY(-1px);
+  background: #eae5ff;
+}
+
+.team-member-card .project-controls button:last-child {
+  border-color: #fecdd3;
+  background: #fff1f2;
+  color: #be3655;
+}
+
+.team-member-card .project-controls button:last-child:hover {
+  background: #ffe4e8;
+}
+
+
+/* Team Member search */
+.team-member-search {
+  max-width: 560px;
+  margin: 0 0 24px;
+}
+
+.team-member-search input[type="search"] {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 18px;
+  border: 1px solid #e1dcff;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ffffff, #faf8ff);
+  color: #292451;
+  font: inherit;
+  font-size: 14px;
+  box-shadow: 0 5px 18px rgba(91, 85, 231, 0.06);
+  transition: border-color 180ms ease, box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.team-member-search input[type="search"]::placeholder {
+  color: #9994b5;
+}
+
+.team-member-search input[type="search"]:focus {
+  outline: none;
+  border-color: #8b7cff;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.12);
 }
 

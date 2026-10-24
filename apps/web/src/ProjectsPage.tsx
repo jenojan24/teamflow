@@ -122,6 +122,12 @@ return matchesSearch && matchesStatus && matchesPriority
           <h1>TeamFlow</h1>
           <p>Project Management</p>
         </div>
+        
+<nav className="main-nav" aria-label="Main navigation">
+  <a href="/" aria-current="page">Projects</a>
+  <a href="/team-members">Team Members</a>
+</nav>
+
 
         <div className="api-status">
           <span
