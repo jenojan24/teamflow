@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import projectRoutes from "./routes/project.routes.js";
 import teamMemberRoutes from "./routes/team-member.routes.js";
+import taskRoues from "./routes/task.routes.js"
+
 
 const app = express();
 
@@ -18,6 +20,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/projects", projectRoutes);
 app.use("/api/team-members", teamMemberRoutes);
+app.use("/api/tasks", taskRoues);
 
 app.use((_req, res) => {
   res.status(404).json({
