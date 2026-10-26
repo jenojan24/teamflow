@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import ProjectsPage from './ProjectsPage'
 import ProjectDetailPage from './components/ProjectDetailPage'
 import TeamMembersPage from './TeamMembersPage'
-
+import TasksPage from './TaskPage'
 
 function App() {
   return (
@@ -13,6 +13,8 @@ function App() {
         element={<ProjectDetailPage />}
       />
       <Route path="/team-members" element={<TeamMembersPage />} />
+      <Route path ="/task" element={<TasksPage/>}/>
+   
     </Routes>
   )
 }

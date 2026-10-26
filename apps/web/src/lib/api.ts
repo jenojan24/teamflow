@@ -5,11 +5,14 @@ export type ProjectStatus = 'planning' | 'active' | 'completed'
 
 export type ProjectPriority = 'low' | 'medium' | 'high'
 
+export type TaskStatus = 'todo' | 'in-progress' | 'completed'
+
+export type TaskPriority = 'low' | 'medium' | 'high'
 
 export type TeamMemberRole =
   | 'developer'
   | 'designer'
-  | 'project-manager'
+  | 'project-manager' 
   | 'tester'
   | 'other'
 
@@ -20,6 +23,35 @@ export interface TeamMember {
   role: TeamMemberRole
   createdAt: string
   updatedAt: string
+}
+
+
+export interface Task {
+  _id: string
+  title: string
+  description: string
+  projectId: string
+  assignedTo?: string | null
+  status: TaskStatus
+  priority: TaskPriority
+  dueDate?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateTaskInput {
+  title: string
+  description?: string
+  projectId: string
+  assignedTo?: string
+  status?: TaskStatus
+  priority?: TaskPriority
+  dueDate?: string
+}
+
+export type UpdateTaskInput = Partial<CreateTaskInput> & {
+  assignedTo?: string | null
+  dueDate?: string | null
 }
 
 export interface CreateTeamMemberInput {
@@ -245,3 +277,70 @@ export async function deleteTeamMember(id: string): Promise<void> {
   }
 }
 
+
+export async function getTasks(): Promise<Task[]> {
+  const response = await fetch(`${API_URL}/api/tasks`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to load tasks: ${response.status}`)
+  }
+
+  return response.json() as Promise<Task[]>
+}
+
+export async function getTask(id: string): Promise<Task> {
+  const response = await fetch(`${API_URL}/api/tasks/${id}`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to load task: ${response.status}`)
+  }
+
+  return response.json() as Promise<Task>
+}
+
+export async function createTask(
+  task: CreateTaskInput,
+): Promise<Task> {
+  const response = await fetch(`${API_URL}/api/tasks`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(task),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to create task: ${response.status}`)
+  }
+
+  return response.json() as Promise<Task>
+}
+
+export async function updateTask(
+  id: string,
+  task: UpdateTaskInput,
+): Promise<Task> {
+  const response = await fetch(`${API_URL}/api/tasks/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(task),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to update task: ${response.status}`)
+  }
+
+  return response.json() as Promise<Task>
+}
+
+export async function deleteTask(id: string): Promise<void> {
+  const response = await fetch(`${API_URL}/api/tasks/${id}`, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete task: ${response.status}`)
+  }
+}
