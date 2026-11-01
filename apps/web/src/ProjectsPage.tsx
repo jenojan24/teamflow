@@ -1,50 +1,79 @@
+import { useEffect, useState } from "react";
+import {
+  checkApiHealth,
+  getProjects,
+  getTasks,
+  getTeamMembers,
+  deleteProject,
+} from "./lib/api";
 
-import { useEffect, useState } from 'react'
-import { checkApiHealth, getProjects, deleteProject } from './lib/api'
-import type { Project } from './lib/api'
-import CreateProjectForm from './components/CreateProjectForm'
-import ProjectCard from './components/ProjectCard'
-import EditProjectForm from './components/EditProjectForm'
-import Header from './components/Header'
-import './App.css'
+import type { Project, Task, TeamMember } from "./lib/api";
+import CreateProjectForm from "./components/CreateProjectForm";
+import ProjectCard from "./components/ProjectCard";
+import EditProjectForm from "./components/EditProjectForm";
+import Header from "./components/Header";
+import "./App.css";
 
 function ProjectsPage() {
-  const [apiStatus, setApiStatus] = useState('Checking API...')
-  const [projects, setProjects] = useState<Project[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [priorityFilter, setPriorityFilter] = useState('all')
-  const [sortBy, setSortBy] = useState('newest')
-  const [currentPage, setCurrentPage] = useState(1)
-  const projectsPerPage = 6
+  const [apiStatus, setApiStatus] = useState("Checking API...");
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const projectsPerPage = 6;
 
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [editingProject, setEditingProject] = useState<Project | null>(null)
-  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState('')
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
+    null,
+  );
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
-    async function loadProjects() {
+    async function loadDashboardData() {
       try {
-        await checkApiHealth()
-        setApiStatus('Connected')
-        const data = await getProjects()
-        setProjects(data)
+        await checkApiHealth();
+        setApiStatus("Connected");
+
+        const projectData = await getProjects();
+        setProjects(projectData);
       } catch {
-        setApiStatus('Disconnected')
-        setError('Unable to load projects. Please check that the API is running.')
+        setApiStatus("Disconnected");
+        setError(
+          "Unable to load projects. Please check that the API is running.",
+        );
       } finally {
-        setLoading(false)
+        setLoading(false);
+      }
+
+      try {
+        const [taskData, teamMemberData] = await Promise.all([
+          getTasks(),
+          getTeamMembers(),
+        ]);
+
+        setTasks(taskData);
+        setTeamMembers(teamMemberData);
+      } catch {
+        setStatsError("Unable to load dashboard statistics.");
+      } finally {
+        setStatsLoading(false);
       }
     }
 
-    loadProjects()
-  }, [])
+    loadDashboardData();
+  }, []);
 
   function handleProjectCreated(newProject: Project) {
-    setProjects((currentProjects) => [newProject, ...currentProjects])
-    setCurrentPage(1)
+    setProjects((currentProjects) => [newProject, ...currentProjects]);
+    setCurrentPage(1);
   }
 
   function handleProjectUpdated(updatedProject: Project) {
@@ -52,84 +81,101 @@ function ProjectsPage() {
       currentProjects.map((project) =>
         project._id === updatedProject._id ? updatedProject : project,
       ),
-    )
-    setEditingProject(null)
+    );
+    setEditingProject(null);
   }
 
   async function handleProjectDeleted(project: Project) {
     const confirmed = window.confirm(
       `Are you sure you want to delete "${project.name}"? This action cannot be undone.`,
-    )
+    );
 
-    if (!confirmed) return
+    if (!confirmed) return;
 
-    setDeletingProjectId(project._id)
-    setDeleteError('')
+    setDeletingProjectId(project._id);
+    setDeleteError("");
 
     try {
-      await deleteProject(project._id)
+      await deleteProject(project._id);
       setProjects((currentProjects) =>
         currentProjects.filter((item) => item._id !== project._id),
-      )
+      );
     } catch {
-      setDeleteError(`Could not delete "${project.name}". Please try again.`)
+      setDeleteError(`Could not delete "${project.name}". Please try again.`);
     } finally {
-      setDeletingProjectId(null)
+      setDeletingProjectId(null);
     }
   }
 
-  const totalProjects = projects.length
-  const activeProjects = projects.filter((project) => project.status === 'active').length
-  const planningProjects = projects.filter((project) => project.status === 'planning').length
-  const completedProjects = projects.filter((project) => project.status === 'completed').length
+  const totalProjects = projects.length;
+  const activeProjects = projects.filter(
+    (project) => project.status === "active",
+  ).length;
+  const planningProjects = projects.filter(
+    (project) => project.status === "planning",
+  ).length;
+  const completedProjects = projects.filter(
+    (project) => project.status === "completed",
+  ).length;
+  const totalTasks = tasks.length;
 
+  const completedTasks = tasks.filter(
+    (task) => task.status === "completed",
+  ).length;
+
+  const inProgressTasks = tasks.filter(
+    (task) => task.status === "in-progress",
+  ).length;
+
+  const totalTeamMembers = teamMembers.length;
   const filteredProjects = projects
     .filter((project) => {
-      const term = searchTerm.toLowerCase()
+      const term = searchTerm.toLowerCase();
       const matchesSearch =
         project.name.toLowerCase().includes(term) ||
-        project.description.toLowerCase().includes(term)
+        project.description.toLowerCase().includes(term);
       const matchesStatus =
-  statusFilter === 'all' || project.status === statusFilter
+        statusFilter === "all" || project.status === statusFilter;
 
-const matchesPriority =
-  priorityFilter === 'all' || project.priority === priorityFilter
+      const matchesPriority =
+        priorityFilter === "all" || project.priority === priorityFilter;
 
-return matchesSearch && matchesStatus && matchesPriority
+      return matchesSearch && matchesStatus && matchesPriority;
     })
     .sort((a, b) => {
-      if (sortBy === 'oldest') {
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      if (sortBy === "oldest") {
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
       }
 
-      if (sortBy === 'name') {
-        return a.name.localeCompare(b.name)
+      if (sortBy === "name") {
+        return a.name.localeCompare(b.name);
       }
 
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    })
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
-  const totalPages = Math.ceil(filteredProjects.length / projectsPerPage)
-  const safePage = Math.min(currentPage, Math.max(totalPages, 1))
+  const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
+  const safePage = Math.min(currentPage, Math.max(totalPages, 1));
   const paginatedProjects = filteredProjects.slice(
     (safePage - 1) * projectsPerPage,
     safePage * projectsPerPage,
-  )
+  );
 
   return (
     <main className="app-container">
-
-      <Header/>
+      <Header />
       <div className="api-status">
-  <span
-    className={
-      apiStatus === 'Connected'
-        ? 'status-indicator connected'
-        : 'status-indicator disconnected'
-    }
-  />
-  API: {apiStatus}
-</div>
+        <span
+          className={
+            apiStatus === "Connected"
+              ? "status-indicator connected"
+              : "status-indicator disconnected"
+          }
+        />
+        API: {apiStatus}
+      </div>
 
       <section className="welcome-section">
         <h2>Welcome to TeamFlow</h2>
@@ -137,11 +183,52 @@ return matchesSearch && matchesStatus && matchesPriority
       </section>
 
       <section className="dashboard-stats">
-        <div className="stat-card"><h3>Total Projects</h3><p>{totalProjects}</p></div>
-        <div className="stat-card"><h3>Planning</h3><p>{planningProjects}</p></div>
-        <div className="stat-card"><h3>Active</h3><p>{activeProjects}</p></div>
-        <div className="stat-card"><h3>Completed</h3><p>{completedProjects}</p></div>
+        <div className="stat-card">
+          <h3>Total Projects</h3>
+          <p>{totalProjects}</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>Planning</h3>
+          <p>{planningProjects}</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>Active</h3>
+          <p>{activeProjects}</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>Completed Projects</h3>
+          <p>{completedProjects}</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>Total Tasks</h3>
+          <p>{statsLoading ? "..." : totalTasks}</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>Completed Tasks</h3>
+          <p>{statsLoading ? "..." : completedTasks}</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>In Progress Tasks</h3>
+          <p>{statsLoading ? "..." : inProgressTasks}</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>Team Members</h3>
+          <p>{statsLoading ? "..." : totalTeamMembers}</p>
+        </div>
       </section>
+
+      {statsError && (
+        <p className="error-message" role="alert">
+          {statsError}
+        </p>
+      )}
 
       <section className="projects-section">
         <div className="section-heading">
@@ -159,8 +246,8 @@ return matchesSearch && matchesStatus && matchesPriority
             placeholder="Search projects..."
             value={searchTerm}
             onChange={(event) => {
-              setSearchTerm(event.target.value)
-              setCurrentPage(1)
+              setSearchTerm(event.target.value);
+              setCurrentPage(1);
             }}
             aria-label="Search projects"
           />
@@ -168,8 +255,8 @@ return matchesSearch && matchesStatus && matchesPriority
           <select
             value={statusFilter}
             onChange={(event) => {
-              setStatusFilter(event.target.value)
-              setCurrentPage(1)
+              setStatusFilter(event.target.value);
+              setCurrentPage(1);
             }}
             aria-label="Filter projects by status"
           >
@@ -179,24 +266,24 @@ return matchesSearch && matchesStatus && matchesPriority
             <option value="completed">Completed</option>
           </select>
           <select
-  value={priorityFilter}
-  onChange={(event) => {
-    setPriorityFilter(event.target.value)
-    setCurrentPage(1)
-  }}
-  aria-label="Filter projects by priority"
->
-  <option value="all">All priorities</option>
-  <option value="high">High priority</option>
-  <option value="medium">Medium priority</option>
-  <option value="low">Low priority</option>
-</select>
+            value={priorityFilter}
+            onChange={(event) => {
+              setPriorityFilter(event.target.value);
+              setCurrentPage(1);
+            }}
+            aria-label="Filter projects by priority"
+          >
+            <option value="all">All priorities</option>
+            <option value="high">High priority</option>
+            <option value="medium">Medium priority</option>
+            <option value="low">Low priority</option>
+          </select>
 
           <select
             value={sortBy}
             onChange={(event) => {
-              setSortBy(event.target.value)
-              setCurrentPage(1)
+              setSortBy(event.target.value);
+              setCurrentPage(1);
             }}
             aria-label="Sort projects"
           >
@@ -206,17 +293,28 @@ return matchesSearch && matchesStatus && matchesPriority
           </select>
         </div>
 
-        {deleteError && <p className="error-message" role="alert">{deleteError}</p>}
+        {deleteError && (
+          <p className="error-message" role="alert">
+            {deleteError}
+          </p>
+        )}
         {loading && <p>Loading projects...</p>}
-        {!loading && error && <p className="error-message" role="alert">{error}</p>}
+        {!loading && error && (
+          <p className="error-message" role="alert">
+            {error}
+          </p>
+        )}
 
         {!loading && !error && projects.length === 0 && (
           <p>No projects yet. Create your first project above.</p>
         )}
 
-        {!loading && !error && projects.length > 0 && filteredProjects.length === 0 && (
-          <p>No projects match your search or selected filter.</p>
-        )}
+        {!loading &&
+          !error &&
+          projects.length > 0 &&
+          filteredProjects.length === 0 && (
+            <p>No projects match your search or selected filter.</p>
+          )}
 
         {!loading && !error && filteredProjects.length > 0 && (
           <>
@@ -245,15 +343,21 @@ return matchesSearch && matchesStatus && matchesPriority
               <div className="pagination">
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.max(1, page - 1))
+                  }
                   disabled={safePage === 1}
                 >
                   Previous
                 </button>
-                <span>Page {safePage} of {totalPages}</span>
+                <span>
+                  Page {safePage} of {totalPages}
+                </span>
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.min(totalPages, page + 1))
+                  }
                   disabled={safePage === totalPages}
                 >
                   Next
@@ -264,7 +368,7 @@ return matchesSearch && matchesStatus && matchesPriority
         )}
       </section>
     </main>
-  )
+  );
 }
 
-export default ProjectsPage
+export default ProjectsPage;
