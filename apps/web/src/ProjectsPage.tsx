@@ -5,6 +5,7 @@ import type { Project } from './lib/api'
 import CreateProjectForm from './components/CreateProjectForm'
 import ProjectCard from './components/ProjectCard'
 import EditProjectForm from './components/EditProjectForm'
+import Header from './components/Header'
 import './App.css'
 
 function ProjectsPage() {
@@ -117,29 +118,18 @@ return matchesSearch && matchesStatus && matchesPriority
 
   return (
     <main className="app-container">
-      <header className="topbar">
-        <div className="brand">
-          <h1>TeamFlow</h1>
-          <p>Project Management</p>
-        </div>
-        
-<nav className="main-nav" aria-label="Main navigation">
-  <a href="/" aria-current="page">Projects</a>
-  <a href="/team-members">Team Members</a>
-</nav>
 
-
-        <div className="api-status">
-          <span
-            className={
-              apiStatus === 'Connected'
-                ? 'status-indicator connected'
-                : 'status-indicator disconnected'
-            }
-          />
-          API: {apiStatus}
-        </div>
-      </header>
+      <Header/>
+      <div className="api-status">
+  <span
+    className={
+      apiStatus === 'Connected'
+        ? 'status-indicator connected'
+        : 'status-indicator disconnected'
+    }
+  />
+  API: {apiStatus}
+</div>
 
       <section className="welcome-section">
         <h2>Welcome to TeamFlow</h2>
