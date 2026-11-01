@@ -16,6 +16,7 @@ import type {
   TaskPriority,
   CreateTaskInput,
 } from './lib/api'
+import Header from './components/Header'
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -287,6 +288,7 @@ async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 
   return (
     <main className="tasks-page">
+      <Header/>
       <h1>Task Management</h1>
       <p>Create tasks and track your team's work.</p>
 

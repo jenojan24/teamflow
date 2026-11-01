@@ -12,6 +12,8 @@ import type {
   CreateTeamMemberInput,
 } from './lib/api'
 import './App.css'
+import Header from './components/Header'
+
 
 const emptyForm: CreateTeamMemberInput = {
   name: '',
@@ -141,18 +143,7 @@ useEffect(() => {
 
   return (
     <main className="app-container">
-      <header className="topbar">
-        <div className="brand">
-          <h1>TeamFlow</h1>
-          <p>Project Management</p>
-        </div>
-
-        <nav aria-label="Main navigation">
-          <a href="/">Projects</a>
-          {' · '}
-          <a href="/team-members" aria-current="page">Team Members</a>
-        </nav>
-      </header>
+     <Header/>
 
       <section className="welcome-section">
         <h2>Team Members</h2>
