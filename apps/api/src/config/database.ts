@@ -79,3 +79,13 @@ export async function disconnectDatabase(): Promise<void> {
   }
 }
 
+export async function createDatabaseIndexes(): Promise<void> {
+  const database = getDatabase();
+
+  await database.collection("users").createIndex(
+    { email: 1 },
+    { unique: true },
+  );
+
+  console.log("Database indexes created successfully");
+}
