@@ -1,25 +1,8 @@
-
-import dotenv from "dotenv";
+import "dotenv/config";
 import app from "./app.js";
-import { connectDatabase,createDatabaseIndexes,} from "./config/database.js";
-
-dotenv.config();
 
 const PORT = Number(process.env.PORT) || 5000;
 
-async function startServer() {
-  try {
-    await connectDatabase();
-    await createDatabaseIndexes();
-
-
-    app.listen(PORT, () => {
-      console.log(`TeamFlow API listening on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Failed to start TeamFlow API:", error);
-    process.exit(1);
-  }
-}
-
-startServer();
+app.listen(PORT, () => {
+  console.log(`TeamFlow API listening on port ${PORT}`);
+});

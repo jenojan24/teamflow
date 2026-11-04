@@ -8,9 +8,19 @@ import teamMemberRoutes from "./routes/team-member.routes.js";
 import taskRoutes from "./routes/task.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import { csrfProtection } from "./middleware/csrf.middleware.js";
+import {
+  connectDatabase,
+  createDatabaseIndexes,
+} from "./config/database.js";
 
 const app = express();
 
+let initializationPromise: Promise<void> | null = null;
+
+async function initializeDatabase(): Promise<void> {
+  await connectDatabase();
+  await createDatabaseIndexes();
+}
 // Read allowed frontend URLs from environment variables.
 const allowedOrigins = (
   process.env.CLIENT_URL ??
@@ -31,6 +41,21 @@ app.use(cookieParser());
 app.use(express.json({ limit: "10kb" }));
 
 app.use(csrfProtection);
+app.use(async (_req, _res, next) => {
+  try {
+    if (!initializationPromise) {
+      initializationPromise = initializeDatabase().catch((error) => {
+        initializationPromise = null;
+        throw error;
+      });
+    }
+
+    await initializationPromise;
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.get("/api/health", (_req, res) => {
   res.json({
