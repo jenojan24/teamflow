@@ -38,7 +38,9 @@ export async function authenticateUser(
       throw new Error("JWT_SECRET is missing from environment");
     }
 
-    const decoded = jwt.verify(token, jwtSecret);
+   const decoded = jwt.verify(token, jwtSecret, {
+  algorithms: ["HS256"],
+});
 
     if (
       typeof decoded === "string" ||

@@ -14,7 +14,7 @@ async function startServer() {
 
 
     app.listen(PORT, () => {
-      console.log(`TeamFlow API running at http://localhost:${PORT}`);
+      console.log(`TeamFlow API listening on port ${PORT}`);
     });
   } catch (error) {
     console.error("Failed to start TeamFlow API:", error);

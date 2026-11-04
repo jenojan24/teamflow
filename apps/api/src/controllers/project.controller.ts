@@ -1,5 +1,6 @@
 
 import type { Request, Response, NextFunction } from "express";
+import { ObjectId } from "mongodb";
 import { z } from "zod";
 import {
   createProjectSchema,
@@ -12,6 +13,11 @@ import {
   updateProject,
   deleteProject,
 } from "../services/project.service.js";
+import type { AuthenticatedRequest } from "../middleware/auth.middleware.js";
+
+function getAuthenticatedUser(req: Request) {
+  return (req as AuthenticatedRequest).user;
+}
 
 export async function createProjectController(
   req: Request,
@@ -20,7 +26,12 @@ export async function createProjectController(
 ) {
   try {
     const input = createProjectSchema.parse(req.body);
-    const project = await createProject(input);
+    const user = getAuthenticatedUser(req);
+
+    const project = await createProject({
+      ...input,
+      ownerId: new ObjectId(user.id),
+    });
 
     res.status(201).json({
       success: true,
@@ -41,12 +52,13 @@ export async function createProjectController(
 }
 
 export async function getProjectsController(
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const projects = await getProjects();
+    const user = getAuthenticatedUser(req);
+    const projects = await getProjects(user.id);
 
     res.status(200).json({
       success: true,
@@ -63,7 +75,11 @@ export async function getProjectByIdController(
   next: NextFunction,
 ) {
   try {
-    const project = await getProjectById(req.params.id as string);
+    const user = getAuthenticatedUser(req);
+    const project = await getProjectById(
+      req.params.id as string,
+      user.id,
+    );
 
     if (!project) {
       res.status(404).json({
@@ -89,7 +105,13 @@ export async function updateProjectController(
 ) {
   try {
     const input = updateProjectSchema.parse(req.body);
-    const project = await updateProject(req.params.id as string, input);
+    const user = getAuthenticatedUser(req);
+
+    const project = await updateProject(
+      req.params.id as string,
+      user.id,
+      input,
+    );
 
     if (!project) {
       res.status(404).json({
@@ -123,7 +145,11 @@ export async function deleteProjectController(
   next: NextFunction,
 ) {
   try {
-    const deleted = await deleteProject(req.params.id as string);
+    const user = getAuthenticatedUser(req);
+    const deleted = await deleteProject(
+      req.params.id as string,
+      user.id,
+    );
 
     if (!deleted) {
       res.status(404).json({

@@ -10,10 +10,10 @@ export interface Task {
     title: string;
     description: string;
     projectId: ObjectId;
-    assignedTo?: ObjectId;
+    assignedTo?: ObjectId | null;
     status: TaskStatus;
     priority: TaskPriority;
-    dueDate?: Date;
+    dueDate?: Date | null;
     createdAt: Date;
     updatedAt: Date;
 }

@@ -1,10 +1,13 @@
-
 import type { Request, Response } from "express";
 import { ObjectId } from "mongodb";
+
 import {
   createTaskSchema,
   updateTaskSchema,
 } from "../models/task.validation.js";
+
+import type { Task } from "../models/task.model.js";
+
 import {
   createTask,
   getTasks,
@@ -12,8 +15,14 @@ import {
   updateTask,
   deleteTask,
 } from "../services/task.service.js";
-import { getDatabase } from "../config/database.js";
 
+import type { AuthenticatedRequest } from "../middleware/auth.middleware.js";
+
+function getAuthenticatedUser(req: Request) {
+  return (req as AuthenticatedRequest).user;
+}
+
+// Create task
 export async function createTaskController(
   req: Request,
   res: Response,
@@ -28,6 +37,7 @@ export async function createTaskController(
     return;
   }
 
+  const user = getAuthenticatedUser(req);
   const projectId = parsed.data.projectId;
 
   if (!ObjectId.isValid(projectId)) {
@@ -35,61 +45,63 @@ export async function createTaskController(
     return;
   }
 
-  const project = await getDatabase()
-    .collection("projects")
-    .findOne({ _id: new ObjectId(projectId) });
-
-  if (!project) {
-    res.status(400).json({ message: "Project not found" });
+  if (
+    parsed.data.assignedTo &&
+    !ObjectId.isValid(parsed.data.assignedTo)
+  ) {
+    res.status(400).json({ message: "Invalid team member ID" });
     return;
   }
 
-  if (parsed.data.assignedTo !== undefined) {
-    if (!ObjectId.isValid(parsed.data.assignedTo)) {
-      res.status(400).json({ message: "Invalid team member ID" });
-      return;
-    }
+  const task = await createTask(
+    {
+      title: parsed.data.title,
+      description: parsed.data.description,
+      projectId: new ObjectId(projectId),
+      ...(parsed.data.assignedTo
+        ? { assignedTo: new ObjectId(parsed.data.assignedTo) }
+        : {}),
+      status: parsed.data.status,
+      priority: parsed.data.priority,
+      ...(parsed.data.dueDate
+        ? { dueDate: new Date(parsed.data.dueDate) }
+        : {}),
+    },
+    user.id,
+  );
 
-    const member = await getDatabase()
-      .collection("teamMembers")
-      .findOne({ _id: new ObjectId(parsed.data.assignedTo) });
-
-    if (!member) {
-      res.status(400).json({ message: "Team member not found" });
-      return;
-    }
+  if (!task) {
+    res.status(400).json({
+      message: "Project or assigned team member not found or not accessible",
+    });
+    return;
   }
-
-  const task = await createTask({
-    title: parsed.data.title,
-    description: parsed.data.description,
-    projectId: new ObjectId(projectId),
-    ...(parsed.data.assignedTo
-      ? { assignedTo: new ObjectId(parsed.data.assignedTo) }
-      : {}),
-    status: parsed.data.status,
-    priority: parsed.data.priority,
-    ...(parsed.data.dueDate
-      ? { dueDate: new Date(parsed.data.dueDate) }
-      : {}),
-  });
 
   res.status(201).json(task);
 }
 
+// Get all tasks belonging to logged-in user
 export async function getTasksController(
-  _req: Request,
+  req: Request,
   res: Response,
 ): Promise<void> {
-  const tasks = await getTasks();
+  const user = getAuthenticatedUser(req);
+  const tasks = await getTasks(user.id);
+
   res.status(200).json(tasks);
 }
 
+// Get one task
 export async function getTaskByIdController(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const task = await getTaskById(String(req.params.id));
+  const user = getAuthenticatedUser(req);
+
+  const task = await getTaskById(
+    String(req.params.id),
+    user.id,
+  );
 
   if (!task) {
     res.status(404).json({ message: "Task not found" });
@@ -99,6 +111,7 @@ export async function getTaskByIdController(
   res.status(200).json(task);
 }
 
+// Update task
 export async function updateTaskController(
   req: Request,
   res: Response,
@@ -113,8 +126,21 @@ export async function updateTaskController(
     return;
   }
 
+  const user = getAuthenticatedUser(req);
   const data = parsed.data;
-  const updates: Record<string, unknown> = {};
+
+  const updates: Partial<
+    Pick<
+      Task,
+      | "title"
+      | "description"
+      | "projectId"
+      | "assignedTo"
+      | "status"
+      | "priority"
+      | "dueDate"
+    >
+  > = {};
 
   if (data.title !== undefined) updates.title = data.title;
   if (data.description !== undefined) updates.description = data.description;
@@ -124,15 +150,6 @@ export async function updateTaskController(
   if (data.projectId !== undefined) {
     if (!ObjectId.isValid(data.projectId)) {
       res.status(400).json({ message: "Invalid project ID" });
-      return;
-    }
-
-    const project = await getDatabase()
-      .collection("projects")
-      .findOne({ _id: new ObjectId(data.projectId) });
-
-    if (!project) {
-      res.status(400).json({ message: "Project not found" });
       return;
     }
 
@@ -148,28 +165,21 @@ export async function updateTaskController(
         return;
       }
 
-      const member = await getDatabase()
-        .collection("teamMembers")
-        .findOne({ _id: new ObjectId(data.assignedTo) });
-
-      if (!member) {
-        res.status(400).json({ message: "Team member not found" });
-        return;
-      }
-
       updates.assignedTo = new ObjectId(data.assignedTo);
     }
   }
 
   if (data.dueDate !== undefined) {
-    if (data.dueDate === null) {
-      updates.dueDate = null;
-    } else {
-      updates.dueDate = new Date(data.dueDate);
-    }
+    updates.dueDate = data.dueDate === null
+      ? null
+      : new Date(data.dueDate);
   }
 
-  const task = await updateTask(String(req.params.id), updates);
+  const task = await updateTask(
+    String(req.params.id),
+    user.id,
+    updates,
+  );
 
   if (!task) {
     res.status(404).json({ message: "Task not found" });
@@ -179,11 +189,17 @@ export async function updateTaskController(
   res.status(200).json(task);
 }
 
+// Delete task
 export async function deleteTaskController(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const deleted = await deleteTask(String(req.params.id));
+  const user = getAuthenticatedUser(req);
+
+  const deleted = await deleteTask(
+    String(req.params.id),
+    user.id,
+  );
 
   if (!deleted) {
     res.status(404).json({ message: "Task not found" });

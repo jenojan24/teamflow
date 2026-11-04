@@ -1062,3 +1062,131 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================
+   Authentication Pages
+========================= */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #f4f6fb;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 36px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.auth-card h1 {
+  margin-bottom: 10px;
+  color: #172033;
+  font-size: 28px;
+}
+
+.auth-card > p {
+  margin-bottom: 24px;
+  color: #687386;
+  line-height: 1.5;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-card form > div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.auth-card label {
+  color: #344054;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.auth-card input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+}
+
+.auth-card input:focus {
+  border-color: #536dfe;
+  box-shadow: 0 0 0 3px rgba(83, 109, 254, 0.12);
+}
+
+.auth-card button {
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  background: #536dfe;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-card button:hover {
+  background: #4057e8;
+}
+
+.auth-card button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.auth-card .auth-error {
+  margin: 0;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.auth-card a {
+  color: #536dfe;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth-card a:hover {
+  text-decoration: underline;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-user span {
+  font-weight: 600;
+  color: #344054;
+}
+
+.header-user button {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 7px;
+  background: #ef4444;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.header-user button:hover {
+  background: #dc2626;
+}

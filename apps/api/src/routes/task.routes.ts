@@ -7,8 +7,10 @@ import {
   updateTaskController,
   deleteTaskController,
 } from "../controllers/task.controller.js";
+import { authenticateUser } from "../middleware/auth.middleware.js";
 
 const router = Router();
+router.use(authenticateUser);
 
 router.post("/", createTaskController);
 router.get("/", getTasksController);

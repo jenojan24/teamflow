@@ -3,6 +3,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -18,8 +19,36 @@ import {
 
 let mongoServer: MongoMemoryServer;
 
+let agent = request.agent(app);
+
+beforeEach(async () => {
+  agent = request.agent(app);
+
+  const credentials = {
+    name: "Team Member Test User",
+    email: `team-test-${Date.now()}@example.com`,
+    password: "TestPassword123",
+  };
+
+  const registration = await agent
+    .post("/api/auth/register")
+    .send(credentials);
+
+  expect(registration.status).toBe(201);
+
+  const login = await agent
+    .post("/api/auth/login")
+    .send({
+      email: credentials.email,
+      password: credentials.password,
+    });
+
+  expect(login.status).toBe(200);
+});
+
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
+  process.env.JWT_SECRET = "teamflow-test-secret-for-vitest-only";
 
   process.env.MONGODB_URI = mongoServer.getUri();
   process.env.MONGODB_DATABASE = "teamflow_test";
@@ -29,6 +58,9 @@ beforeAll(async () => {
 
 afterEach(async () => {
   await getDatabase().collection("teamMembers").deleteMany({});
+  await getDatabase().collection("users").deleteMany({
+    email: /^team-test-/,
+  });
 });
 
 afterAll(async () => {
@@ -38,7 +70,7 @@ afterAll(async () => {
 
 describe("Team Member API integration", () => {
   it("creates a team member and saves it to the test database", async () => {
-    const response = await request(app)
+    const response = await agent
       .post("/api/team-members")
       .send({
         name: "Alex Silva",
@@ -60,25 +92,23 @@ describe("Team Member API integration", () => {
     expect(savedMember?.name).toBe("Alex Silva");
   });
 
-  it("returns team members saved in the test database", async () => {
-    await getDatabase().collection("teamMembers").insertOne({
-      name: "Jamie Lee",
-      email: "jamie@example.com",
-      role: "designer",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    const response = await request(app).get("/api/team-members");
-
-    expect(response.status).toBe(200);
-    expect(response.body.success).toBe(true);
-    expect(response.body.data).toHaveLength(1);
-    expect(response.body.data[0].name).toBe("Jamie Lee");
+it("returns team members saved in the test database", async () => {
+  await agent.post("/api/team-members").send({
+    name: "Jamie Lee",
+    email: "jamie@example.com",
+    role: "designer",
   });
 
+  const response = await agent.get("/api/team-members");
+
+  expect(response.status).toBe(200);
+  expect(response.body.success).toBe(true);
+  expect(response.body.data).toHaveLength(1);
+  expect(response.body.data[0].name).toBe("Jamie Lee");
+});
+
   it("gets a team member by ID", async () => {
-    const created = await request(app)
+    const created = await agent
       .post("/api/team-members")
       .send({
         name: "Taylor Smith",
@@ -88,14 +118,14 @@ describe("Team Member API integration", () => {
 
     const id = created.body.data._id;
 
-    const response = await request(app).get(`/api/team-members/${id}`);
+    const response = await agent.get(`/api/team-members/${id}`);
 
     expect(response.status).toBe(200);
     expect(response.body.data.name).toBe("Taylor Smith");
   });
 
   it("updates a team member", async () => {
-    const created = await request(app)
+    const created = await agent
       .post("/api/team-members")
       .send({
         name: "Morgan Green",
@@ -105,7 +135,7 @@ describe("Team Member API integration", () => {
 
     const id = created.body.data._id;
 
-    const response = await request(app)
+    const response = await agent
       .patch(`/api/team-members/${id}`)
       .send({
         name: "Morgan Brown",
@@ -119,7 +149,7 @@ describe("Team Member API integration", () => {
   });
 
   it("deletes a team member", async () => {
-    const created = await request(app)
+    const created = await agent
       .post("/api/team-members")
       .send({
         name: "Jordan White",
@@ -129,12 +159,12 @@ describe("Team Member API integration", () => {
 
     const id = created.body.data._id;
 
-    const deleted = await request(app).delete(`/api/team-members/${id}`);
+    const deleted = await agent.delete(`/api/team-members/${id}`);
 
     expect(deleted.status).toBe(200);
     expect(deleted.body.message).toBe("Team member deleted successfully");
 
-    const fetched = await request(app).get(`/api/team-members/${id}`);
+    const fetched = await agent.get(`/api/team-members/${id}`);
 
     expect(fetched.status).toBe(404);
     expect(fetched.body.message).toBe("Team member not found");

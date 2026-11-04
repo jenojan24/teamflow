@@ -1,6 +1,15 @@
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000'
 
+async function apiFetch(
+  path: string,
+  options: RequestInit = {},
+): Promise<Response> {
+  return fetch(`${API_URL}${path}`, {
+    ...options,
+    credentials: 'include',
+  })
+}
 export type ProjectStatus = 'planning' | 'active' | 'completed'
 
 export type ProjectPriority = 'low' | 'medium' | 'high'
@@ -66,6 +75,7 @@ export interface Project {
   description: string
   status: ProjectStatus
   priority: ProjectPriority
+   ownerId: string
   createdAt: string
   updatedAt: string
 }
@@ -76,7 +86,7 @@ interface ApiResponse<T> {
 }
 
 export async function checkApiHealth() {
-  const response = await fetch(`${API_URL}/api/health`)
+  const response = await apiFetch('/api/health')
 
   if (!response.ok) {
     throw new Error(`API request failed: ${response.status}`)
@@ -89,7 +99,7 @@ export async function checkApiHealth() {
 }
 
 export async function getProjects(): Promise<Project[]> {
-  const response = await fetch(`${API_URL}/api/projects`)
+ const response = await apiFetch('/api/projects')
 
   if (!response.ok) {
     throw new Error(`Failed to load projects: ${response.status}`)
@@ -106,7 +116,7 @@ export async function getProjects(): Promise<Project[]> {
 
 
 export async function getProject(id: string): Promise<Project> {
-  const response = await fetch(`${API_URL}/api/projects/${id}`)
+  const response = await apiFetch(`/api/projects/${id}`)
 
   if (!response.ok) {
     throw new Error(`Failed to load project: ${response.status}`)
@@ -128,11 +138,13 @@ export interface CreateProjectInput {
   priority: ProjectPriority
 }
 
+
 export async function createProject(
   project: CreateProjectInput,
 ): Promise<Project> {
-  const response = await fetch(`${API_URL}/api/projects`, {
+  const response = await apiFetch('/api/projects', {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -153,11 +165,12 @@ export async function createProject(
 }
 
 
+
 export async function updateProject(
   id: string,
   project: Partial<CreateProjectInput>,
 ): Promise<Project> {
-  const response = await fetch(`${API_URL}/api/projects/${id}`, {
+  const response = await apiFetch(`/api/projects/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -180,7 +193,7 @@ export async function updateProject(
 
 
 export async function deleteProject(id: string): Promise<void> {
-  const response = await fetch(`${API_URL}/api/projects/${id}`, {
+  const response = await apiFetch(`/api/projects/${id}`, {
     method: 'DELETE',
   })
 
@@ -197,7 +210,7 @@ export async function deleteProject(id: string): Promise<void> {
 
 
 export async function getTeamMembers(): Promise<TeamMember[]> {
-  const response = await fetch(`${API_URL}/api/team-members`)
+  const response = await apiFetch('/api/team-members')
 
   if (!response.ok) {
     throw new Error(`Failed to load team members: ${response.status}`)
@@ -215,7 +228,7 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
 export async function createTeamMember(
   member: CreateTeamMemberInput,
 ): Promise<TeamMember> {
-  const response = await fetch(`${API_URL}/api/team-members`, {
+  const response = await apiFetch('/api/team-members', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -240,7 +253,7 @@ export async function updateTeamMember(
   id: string,
   member: Partial<CreateTeamMemberInput>,
 ): Promise<TeamMember> {
-  const response = await fetch(`${API_URL}/api/team-members/${id}`, {
+  const response = await apiFetch(`/api/team-members/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -262,7 +275,7 @@ export async function updateTeamMember(
 }
 
 export async function deleteTeamMember(id: string): Promise<void> {
-  const response = await fetch(`${API_URL}/api/team-members/${id}`, {
+  const response = await apiFetch(`/api/team-members/${id}`, {
     method: 'DELETE',
   })
 
@@ -279,7 +292,7 @@ export async function deleteTeamMember(id: string): Promise<void> {
 
 
 export async function getTasks(): Promise<Task[]> {
-  const response = await fetch(`${API_URL}/api/tasks`)
+  const response = await apiFetch('/api/tasks')
 
   if (!response.ok) {
     throw new Error(`Failed to load tasks: ${response.status}`)
@@ -289,7 +302,7 @@ export async function getTasks(): Promise<Task[]> {
 }
 
 export async function getTask(id: string): Promise<Task> {
-  const response = await fetch(`${API_URL}/api/tasks/${id}`)
+  const response = await apiFetch(`/api/tasks/${id}`)
 
   if (!response.ok) {
     throw new Error(`Failed to load task: ${response.status}`)
@@ -301,7 +314,7 @@ export async function getTask(id: string): Promise<Task> {
 export async function createTask(
   task: CreateTaskInput,
 ): Promise<Task> {
-  const response = await fetch(`${API_URL}/api/tasks`, {
+  const response = await apiFetch('/api/tasks', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -320,7 +333,7 @@ export async function updateTask(
   id: string,
   task: UpdateTaskInput,
 ): Promise<Task> {
-  const response = await fetch(`${API_URL}/api/tasks/${id}`, {
+  const response = await apiFetch(`/api/tasks/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -336,11 +349,107 @@ export async function updateTask(
 }
 
 export async function deleteTask(id: string): Promise<void> {
-  const response = await fetch(`${API_URL}/api/tasks/${id}`, {
+  const response = await apiFetch(`/api/tasks/${id}`, {
     method: 'DELETE',
   })
 
   if (!response.ok) {
     throw new Error(`Failed to delete task: ${response.status}`)
+  }
+}
+
+// ===============================
+// Authentication
+// ===============================
+
+export interface AuthUser {
+  _id: string
+  name: string
+  email: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RegisterInput {
+  name: string
+  email: string
+  password: string
+}
+
+export interface LoginInput {
+  email: string
+  password: string
+}
+
+
+
+// Register
+export async function registerUser(
+  input: RegisterInput,
+): Promise<AuthUser> {
+  const response = await apiFetch('/api/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  })
+
+  const result = await response.json()
+
+  if (!response.ok) {
+    throw new Error(result.message || 'Registration failed')
+  }
+
+  return result.data
+}
+
+// Login
+export async function loginUser(
+  input: LoginInput,
+): Promise<AuthUser> {
+  const response = await apiFetch('/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(input),
+  })
+
+  const result = await response.json()
+
+  if (!response.ok) {
+    throw new Error(result.message || 'Login failed')
+  }
+
+  return result.data.user
+}
+
+// Get current logged-in user
+export async function getCurrentUser(): Promise<AuthUser> {
+  const response = await apiFetch('/api/auth/me', {
+    method: 'GET',
+    credentials: 'include',
+  })
+
+  const result = await response.json()
+
+  if (!response.ok) {
+    throw new Error(result.message || 'Authentication required')
+  }
+
+  return result.data.user
+}
+
+// Logout
+export async function logoutUser(): Promise<void> {
+  const response = await apiFetch('/api/auth/logout', {
+    method: 'POST',
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    throw new Error('Logout failed')
   }
 }
