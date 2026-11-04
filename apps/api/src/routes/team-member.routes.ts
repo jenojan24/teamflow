@@ -7,8 +7,10 @@ import {
   updateTeamMemberController,
   deleteTeamMemberController,
 } from "../controllers/team-member.controller.js";
+import { authenticateUser } from "../middleware/auth.middleware.js";
 
 const router = Router();
+router.use(authenticateUser);
 
 router.post("/", createTeamMemberController);
 router.get("/", getTeamMembersController);

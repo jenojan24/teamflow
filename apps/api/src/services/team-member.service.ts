@@ -1,4 +1,3 @@
-
 import { ObjectId } from "mongodb";
 import type { Collection } from "mongodb";
 import { getDatabase } from "../config/database.js";
@@ -27,15 +26,16 @@ export async function createTeamMember(
   };
 }
 
-export async function getTeamMembers(): Promise<TeamMember[]> {
+export async function getTeamMembers(ownerId: string): Promise<TeamMember[]> {
   return getTeamMembersCollection()
-    .find()
+    .find({ ownerId: new ObjectId(ownerId) })
     .sort({ createdAt: -1 })
     .toArray();
 }
 
 export async function getTeamMemberById(
   id: string,
+  ownerId: string,
 ): Promise<TeamMember | null> {
   if (!ObjectId.isValid(id)) {
     return null;
@@ -43,11 +43,13 @@ export async function getTeamMemberById(
 
   return getTeamMembersCollection().findOne({
     _id: new ObjectId(id),
+    ownerId: new ObjectId(ownerId),
   });
 }
 
 export async function updateTeamMember(
   id: string,
+  ownerId: string,
   data: Partial<Pick<TeamMember, "name" | "email" | "role">>,
 ): Promise<TeamMember | null> {
   if (!ObjectId.isValid(id)) {
@@ -55,7 +57,10 @@ export async function updateTeamMember(
   }
 
   return getTeamMembersCollection().findOneAndUpdate(
-    { _id: new ObjectId(id) },
+    {
+      _id: new ObjectId(id),
+      ownerId: new ObjectId(ownerId),
+    },
     {
       $set: {
         ...data,
@@ -66,13 +71,17 @@ export async function updateTeamMember(
   );
 }
 
-export async function deleteTeamMember(id: string): Promise<boolean> {
+export async function deleteTeamMember(
+  id: string,
+  ownerId: string,
+): Promise<boolean> {
   if (!ObjectId.isValid(id)) {
     return false;
   }
 
   const result = await getTeamMembersCollection().deleteOne({
     _id: new ObjectId(id),
+    ownerId: new ObjectId(ownerId),
   });
 
   return result.deletedCount === 1;

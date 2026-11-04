@@ -3,6 +3,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -16,21 +17,52 @@ import {
   getDatabase,
 } from "./config/database.js";
 
+
+
 let mongoServer: MongoMemoryServer;
+let agent = request.agent(app);
+
+beforeEach(async () => {
+  agent = request.agent(app);
+
+  const credentials = {
+    name: "Project Test User",
+    email: `project-test-${Date.now()}@example.com`,
+    password: "TestPassword123",
+  };
+
+  const registration = await agent
+    .post("/api/auth/register")
+    .send(credentials);
+
+  expect(registration.status).toBe(201);
+
+  const login = await agent
+    .post("/api/auth/login")
+    .send({
+      email: credentials.email,
+      password: credentials.password,
+    });
+
+  expect(login.status).toBe(200);
+});
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
 
   process.env.MONGODB_URI = mongoServer.getUri();
   process.env.MONGODB_DATABASE = "teamflow_test";
+  process.env.JWT_SECRET = "teamflow-test-secret-for-vitest-only";
 
   await connectDatabase();
 });
 
 afterEach(async () => {
   await getDatabase().collection("projects").deleteMany({});
+  await getDatabase().collection("users").deleteMany({
+    email: /^project-test-/,
+  });
 });
-
 afterAll(async () => {
   await disconnectDatabase();
   await mongoServer.stop();
@@ -38,7 +70,7 @@ afterAll(async () => {
 
 describe("Project API integration", () => {
   it("creates a project and saves it to the test database", async () => {
-    const response = await request(app)
+    const response = await agent
       .post("/api/projects")
       .send({
         name: "Integration Test Project",
@@ -58,26 +90,24 @@ describe("Project API integration", () => {
     expect(savedProject?.status).toBe("planning");
   });
 
-  it("returns projects saved in the test database", async () => {
-    await getDatabase().collection("projects").insertOne({
-      name: "Saved Test Project",
-      description: "A project created for testing",
-      status: "active",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    const response = await request(app).get("/api/projects");
-
-    expect(response.status).toBe(200);
-    expect(response.body.success).toBe(true);
-    expect(response.body.data).toHaveLength(1);
-    expect(response.body.data[0].name).toBe("Saved Test Project");
+it("returns projects saved in the test database", async () => {
+  await agent.post("/api/projects").send({
+    name: "Saved Test Project",
+    description: "A project created for testing",
+    status: "active",
   });
+
+  const response = await agent.get("/api/projects");
+
+  expect(response.status).toBe(200);
+  expect(response.body.success).toBe(true);
+  expect(response.body.data).toHaveLength(1);
+  expect(response.body.data[0].name).toBe("Saved Test Project");
+});
 
   
   it("gets a project by ID", async () => {
-    const created = await request(app)
+    const created = await agent
       .post("/api/projects")
       .send({
         name: "Project To Find",
@@ -86,14 +116,14 @@ describe("Project API integration", () => {
 
     const id = created.body.data._id;
 
-    const response = await request(app).get(`/api/projects/${id}`);
+    const response = await agent.get(`/api/projects/${id}`);
 
     expect(response.status).toBe(200);
     expect(response.body.data.name).toBe("Project To Find");
   });
 
   it("updates a project", async () => {
-    const created = await request(app)
+    const created = await agent
       .post("/api/projects")
       .send({
         name: "Project Before Update",
@@ -102,7 +132,7 @@ describe("Project API integration", () => {
 
     const id = created.body.data._id;
 
-    const response = await request(app)
+    const response = await agent
       .patch(`/api/projects/${id}`)
       .send({
         name: "Project After Update",
@@ -115,7 +145,7 @@ describe("Project API integration", () => {
   });
 
   it("deletes a project", async () => {
-    const created = await request(app)
+    const created = await agent
       .post("/api/projects")
       .send({
         name: "Project To Delete",
@@ -124,12 +154,12 @@ describe("Project API integration", () => {
 
     const id = created.body.data._id;
 
-    const deleted = await request(app).delete(`/api/projects/${id}`);
+    const deleted = await agent.delete(`/api/projects/${id}`);
 
     expect(deleted.status).toBe(200);
     expect(deleted.body.message).toBe("Project deleted successfully");
 
-    const fetched = await request(app).get(`/api/projects/${id}`);
+    const fetched = await agent.get(`/api/projects/${id}`);
 
     expect(fetched.status).toBe(404);
     expect(fetched.body.message).toBe("Project not found");

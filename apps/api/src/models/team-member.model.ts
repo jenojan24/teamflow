@@ -10,6 +10,7 @@ export type TeamMemberRole =
 
 export interface TeamMember {
   _id?: ObjectId;
+  ownerId: ObjectId;
   name: string;
   email: string;
   role: TeamMemberRole;

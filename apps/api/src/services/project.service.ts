@@ -27,30 +27,41 @@ export async function createProject(
   };
 }
 
-export async function getProjects(): Promise<Project[]> {
-  return getProjectsCollection().find().sort({ createdAt: -1 }).toArray();
+export async function getProjects(ownerId: string): Promise<Project[]> {
+  return getProjectsCollection()
+    .find({ ownerId: new ObjectId(ownerId) })
+    .sort({ createdAt: -1 })
+    .toArray();
 }
 
-export async function getProjectById(id: string): Promise<Project | null> {
+export async function getProjectById(
+  id: string,
+  ownerId: string,
+): Promise<Project | null> {
   if (!ObjectId.isValid(id)) {
     return null;
   }
 
   return getProjectsCollection().findOne({
     _id: new ObjectId(id),
+    ownerId: new ObjectId(ownerId),
   });
 }
 
 export async function updateProject(
   id: string,
-  data: Partial<Pick<Project,  "name" | "description" | "status" | "priority">>,
+  ownerId: string,
+  data: Partial<Pick<Project, "name" | "description" | "status" | "priority">>,
 ): Promise<Project | null> {
   if (!ObjectId.isValid(id)) {
     return null;
   }
 
-  const result = await getProjectsCollection().findOneAndUpdate(
-    { _id: new ObjectId(id) },
+  return getProjectsCollection().findOneAndUpdate(
+    {
+      _id: new ObjectId(id),
+      ownerId: new ObjectId(ownerId),
+    },
     {
       $set: {
         ...data,
@@ -59,17 +70,19 @@ export async function updateProject(
     },
     { returnDocument: "after" },
   );
-
-  return result;
 }
 
-export async function deleteProject(id: string): Promise<boolean> {
+export async function deleteProject(
+  id: string,
+  ownerId: string,
+): Promise<boolean> {
   if (!ObjectId.isValid(id)) {
     return false;
   }
 
   const result = await getProjectsCollection().deleteOne({
     _id: new ObjectId(id),
+    ownerId: new ObjectId(ownerId),
   });
 
   return result.deletedCount === 1;

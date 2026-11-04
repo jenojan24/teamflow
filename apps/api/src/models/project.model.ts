@@ -6,6 +6,7 @@ export type ProjectPriority = "low"|"medium"|"high";
 
 export interface Project {
     _id?: ObjectId;
+    ownerId: ObjectId;
     name:string;
     description:string;
     status:ProjectStatus;

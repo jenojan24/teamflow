@@ -1,10 +1,12 @@
-
 import type { Request, Response, NextFunction } from "express";
+import { ObjectId } from "mongodb";
 import { z } from "zod";
+
 import {
   createTeamMemberSchema,
   updateTeamMemberSchema,
 } from "../models/team-member.validation.js";
+
 import {
   createTeamMember,
   getTeamMembers,
@@ -13,6 +15,13 @@ import {
   deleteTeamMember,
 } from "../services/team-member.service.js";
 
+import type { AuthenticatedRequest } from "../middleware/auth.middleware.js";
+
+function getAuthenticatedUser(req: Request) {
+  return (req as AuthenticatedRequest).user;
+}
+
+// Create team member
 export async function createTeamMemberController(
   req: Request,
   res: Response,
@@ -20,7 +29,12 @@ export async function createTeamMemberController(
 ) {
   try {
     const input = createTeamMemberSchema.parse(req.body);
-    const teamMember = await createTeamMember(input);
+    const user = getAuthenticatedUser(req);
+
+    const teamMember = await createTeamMember({
+      ...input,
+      ownerId: new ObjectId(user.id),
+    });
 
     res.status(201).json({
       success: true,
@@ -40,13 +54,15 @@ export async function createTeamMemberController(
   }
 }
 
+// Get all team members belonging to logged-in user
 export async function getTeamMembersController(
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const teamMembers = await getTeamMembers();
+    const user = getAuthenticatedUser(req);
+    const teamMembers = await getTeamMembers(user.id);
 
     res.status(200).json({
       success: true,
@@ -57,13 +73,19 @@ export async function getTeamMembersController(
   }
 }
 
+// Get one team member
 export async function getTeamMemberByIdController(
   req: Request,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const teamMember = await getTeamMemberById(req.params.id as string);
+    const user = getAuthenticatedUser(req);
+
+    const teamMember = await getTeamMemberById(
+      req.params.id as string,
+      user.id,
+    );
 
     if (!teamMember) {
       res.status(404).json({
@@ -82,6 +104,7 @@ export async function getTeamMemberByIdController(
   }
 }
 
+// Update team member
 export async function updateTeamMemberController(
   req: Request,
   res: Response,
@@ -89,8 +112,11 @@ export async function updateTeamMemberController(
 ) {
   try {
     const input = updateTeamMemberSchema.parse(req.body);
+    const user = getAuthenticatedUser(req);
+
     const teamMember = await updateTeamMember(
       req.params.id as string,
+      user.id,
       input,
     );
 
@@ -120,13 +146,19 @@ export async function updateTeamMemberController(
   }
 }
 
+// Delete team member
 export async function deleteTeamMemberController(
   req: Request,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const deleted = await deleteTeamMember(req.params.id as string);
+    const user = getAuthenticatedUser(req);
+
+    const deleted = await deleteTeamMember(
+      req.params.id as string,
+      user.id,
+    );
 
     if (!deleted) {
       res.status(404).json({

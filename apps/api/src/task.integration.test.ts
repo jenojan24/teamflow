@@ -3,6 +3,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -18,6 +19,7 @@ import {
 } from "./config/database.js";
 
 let mongoServer: MongoMemoryServer;
+let agent: ReturnType<typeof request.agent>;
 let projectId: ObjectId;
 
 beforeAll(async () => {
@@ -25,24 +27,51 @@ beforeAll(async () => {
 
   process.env.MONGODB_URI = mongoServer.getUri();
   process.env.MONGODB_DATABASE = "teamflow_test";
+  process.env.JWT_SECRET = "teamflow-test-secret-for-vitest-only";
 
   await connectDatabase();
+});
 
-  projectId = new ObjectId();
+beforeEach(async () => {
+  // Create a fresh authenticated user for each test.
+  agent = request.agent(app);
 
-  await getDatabase().collection("projects").insertOne({
-    _id: projectId,
+  const email = `task-test-${Date.now()}@example.com`;
+
+  const registered = await agent.post("/api/auth/register").send({
+    name: "Task Test User",
+    email,
+    password: "TestPassword123",
+  });
+
+  expect(registered.status).toBe(201);
+
+  const login = await agent.post("/api/auth/login").send({
+    email,
+    password: "TestPassword123",
+  });
+
+  expect(login.status).toBe(200);
+
+  // Create a project owned by the authenticated test user.
+  const project = await agent.post("/api/projects").send({
     name: "Task Test Project",
     description: "Project for task integration tests",
     status: "active",
     priority: "medium",
-    createdAt: new Date(),
-    updatedAt: new Date(),
   });
+
+  expect(project.status).toBe(201);
+
+  projectId = new ObjectId(project.body.data._id);
 });
 
 afterEach(async () => {
   await getDatabase().collection("tasks").deleteMany({});
+  await getDatabase().collection("projects").deleteMany({});
+  await getDatabase().collection("users").deleteMany({
+    email: /^task-test-/,
+  });
 });
 
 afterAll(async () => {
@@ -52,7 +81,7 @@ afterAll(async () => {
 
 describe("Task API integration", () => {
   it("creates a task and saves it to the database", async () => {
-    const response = await request(app)
+    const response = await agent
       .post("/api/tasks")
       .send({
         title: "Build login page",
@@ -74,7 +103,7 @@ describe("Task API integration", () => {
   });
 
   it("rejects a task with a nonexistent project", async () => {
-    const response = await request(app)
+    const response = await agent
       .post("/api/tasks")
       .send({
         title: "Invalid task",
@@ -82,21 +111,19 @@ describe("Task API integration", () => {
       });
 
     expect(response.status).toBe(400);
-    expect(response.body.message).toBe("Project not found");
+   expect(response.body.message).toBe(
+  "Project or assigned team member not found or not accessible",
+);
   });
 
   it("lists tasks", async () => {
-    await getDatabase().collection("tasks").insertOne({
+    await agent.post("/api/tasks").send({
       title: "Saved task",
       description: "",
-      projectId,
-      status: "todo",
-      priority: "medium",
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      projectId: projectId.toHexString(),
     });
 
-    const response = await request(app).get("/api/tasks");
+    const response = await agent.get("/api/tasks");
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveLength(1);
@@ -104,14 +131,14 @@ describe("Task API integration", () => {
   });
 
   it("gets a task by ID", async () => {
-    const created = await request(app)
+    const created = await agent
       .post("/api/tasks")
       .send({
         title: "Task to find",
         projectId: projectId.toHexString(),
       });
 
-    const response = await request(app).get(
+    const response = await agent.get(
       `/api/tasks/${created.body._id}`,
     );
 
@@ -120,14 +147,14 @@ describe("Task API integration", () => {
   });
 
   it("updates a task", async () => {
-    const created = await request(app)
+    const created = await agent
       .post("/api/tasks")
       .send({
         title: "Task before update",
         projectId: projectId.toHexString(),
       });
 
-    const response = await request(app)
+    const response = await agent
       .patch(`/api/tasks/${created.body._id}`)
       .send({
         title: "Task after update",
@@ -140,14 +167,14 @@ describe("Task API integration", () => {
   });
 
   it("deletes a task", async () => {
-    const created = await request(app)
+    const created = await agent
       .post("/api/tasks")
       .send({
         title: "Task to delete",
         projectId: projectId.toHexString(),
       });
 
-    const response = await request(app).delete(
+    const response = await agent.delete(
       `/api/tasks/${created.body._id}`,
     );
 

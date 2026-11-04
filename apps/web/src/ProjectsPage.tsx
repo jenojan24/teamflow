@@ -44,12 +44,23 @@ function ProjectsPage() {
 
         const projectData = await getProjects();
         setProjects(projectData);
-      } catch {
-        setApiStatus("Disconnected");
-        setError(
-          "Unable to load projects. Please check that the API is running.",
-        );
-      } finally {
+      // } catch {
+      //   setApiStatus("Disconnected");
+      //   setError(
+      //     "Unable to load projects. Please check that the API is running.",
+      //   );
+      // }
+      } catch (error) {
+  console.error("Dashboard loading error:", error);
+
+  setApiStatus("Disconnected");
+  setError(
+    error instanceof Error
+      ? error.message
+      : "An unexpected error occurred."
+  );
+}
+       finally {
         setLoading(false);
       }
 

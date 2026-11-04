@@ -1,20 +1,25 @@
+
 import { getDatabase } from "../config/database.js";
 import { ObjectId } from "mongodb";
 import bcrypt from "bcryptjs";
 import type { User } from "../models/user.model.js";
-import type { RegisterUserInput,LoginUserInput } from "../models/user.validation.js";
+import type {
+  RegisterUserInput,
+  LoginUserInput,
+} from "../models/user.validation.js";
 import jwt from "jsonwebtoken";
 
 const USERS_COLLECTION = "users";
 
-export async function registerUser(
-  input: RegisterUserInput,
-) {
+export async function registerUser(input: RegisterUserInput) {
   const database = getDatabase();
+
+  // Normalize email before checking for existing users.
+  const normalizedEmail = input.email.trim().toLowerCase();
 
   const existingUser = await database
     .collection<User>(USERS_COLLECTION)
-    .findOne({ email: input.email });
+    .findOne({ email: normalizedEmail });
 
   if (existingUser) {
     throw new Error("EMAIL_ALREADY_EXISTS");
@@ -26,7 +31,7 @@ export async function registerUser(
 
   const newUser: User = {
     name: input.name,
-    email: input.email,
+    email: normalizedEmail,
     passwordHash,
     createdAt: now,
     updatedAt: now,
@@ -46,12 +51,16 @@ export async function registerUser(
 
   return createdUser;
 }
+
 export async function loginUser(input: LoginUserInput) {
   const database = getDatabase();
 
+  // Use the same normalization during login.
+  const normalizedEmail = input.email.trim().toLowerCase();
+
   const user = await database
     .collection<User>(USERS_COLLECTION)
-    .findOne({ email: input.email });
+    .findOne({ email: normalizedEmail });
 
   if (!user) {
     throw new Error("INVALID_CREDENTIALS");
@@ -75,7 +84,10 @@ export async function loginUser(input: LoginUserInput) {
   const token = jwt.sign(
     { userId: user._id!.toString() },
     jwtSecret,
-    { expiresIn: "1d" },
+    {
+      expiresIn: "1d",
+      algorithm: "HS256",
+    },
   );
 
   return {
